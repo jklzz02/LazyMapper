@@ -1,6 +1,8 @@
 using System.Reflection;
 using LazyMapper.Lib.Exceptions;
 using LazyMapper.Lib.Profile;
+using LazyMapper.Lib.Profile.Keys;
+using LazyMapper.Lib.Profile.Resolvers;
 
 namespace LazyMapper.Lib;
 
@@ -50,37 +52,37 @@ public class Mapper
             return destination;
         }
         
-        foreach (PropertyInfo sourceProperty in unmappedProperties)
+        foreach (PropertyInfo destinationProperty in unmappedProperties)
         {
             ResolverKey key = new ResolverKey
             {
-                SourceMemberName = sourceProperty.Name,
-                SourceMemberType = sourceProperty.PropertyType
+                MemberName = destinationProperty.Name,
+                MemberType = destinationProperty.PropertyType
             };
             
             ResolverBase? resolver = profile.Resolver(key);
+
+            var sourceValue = resolver?.InvokeSelector(source);
             
-            if (sourceProperty.PropertyType == resolver?.DestinationProperty.PropertyType)
+            if (resolver is null || sourceValue is null)
             {
-                resolver.DestinationProperty.SetValue(destination, resolver.InvokeSelector(source));
+                continue;
+            }
+
+            if (!resolver.IsNestedResolution)
+            {
+                destinationProperty.SetValue(destination, sourceValue);
             }
             else
             {
-                
-                var sourceValue = sourceProperty.GetValue(source);
-                if (sourceValue == null)
-                {
-                    continue;
-                }
-                
                 object mappedValue = MapNested(
                     sourceValue,
-                    sourceProperty.PropertyType,
-                    resolver?.DestinationProperty.PropertyType ?? throw new InvalidOperationException(),
+                    resolver.SourceMemberType,
+                    resolver.DestinationMemberType,
                     profile
                 );
                 
-                resolver?.DestinationProperty.SetValue(destination, mappedValue);
+                resolver.DestinationProperty.SetValue(destination, mappedValue);
             }
         }
 

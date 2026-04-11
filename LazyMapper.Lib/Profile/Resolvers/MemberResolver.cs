@@ -1,4 +1,4 @@
-namespace LazyMapper.Lib.Profile;
+namespace LazyMapper.Lib.Profile.Resolvers;
 
 /// <summary>
 /// Holds the mapping information for a member.

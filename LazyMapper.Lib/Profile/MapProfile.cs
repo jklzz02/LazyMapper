@@ -1,6 +1,8 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using LazyMapper.Lib.Exceptions;
+using LazyMapper.Lib.Profile.Keys;
+using LazyMapper.Lib.Profile.Resolvers;
 
 namespace LazyMapper.Lib.Profile;
 
@@ -8,18 +10,19 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     where TSource : class, new()
     where TDestination : class, new()
 {
-    private readonly Dictionary<ResolverKey, ResolverBase> _resolvers = new();
+    private readonly Dictionary<ResolverKey, ResolverBase> _sourceResolvers = new();
+    private readonly Dictionary<ResolverKey, ResolverBase> _destinationResolvers = new();
     
     internal MapProfile()
     {
     }
     
     internal bool HasResolver(ResolverKey key)
-        => _resolvers.ContainsKey(key);
+        => _sourceResolvers.ContainsKey(key) ||  _destinationResolvers.ContainsKey(key);
 
     public ResolverBase? Resolver(ResolverKey binderKey)
-        =>_resolvers.GetValueOrDefault(binderKey);
-
+        => _sourceResolvers.GetValueOrDefault(binderKey) ?? _destinationResolvers.GetValueOrDefault(binderKey);
+    
     public MapProfile<TSource, TDestination> Bind(
         Expression<Func<TSource, object>> sourceMemberSelector,
         Expression<Func<TDestination, object>> destinationMemberSelector)
@@ -42,24 +45,38 @@ public class MapProfile<TSource, TDestination> : IMapProfile
                 $"'{nameof(destinationMemberSelector)}' must be a property expression, got: '{destinationMemberExpression.Member.MemberType}'."
             );
         
-        ResolverKey binderKey = new ResolverKey
+        ResolverKey sourceBinderKey = new ResolverKey
+        { 
+            MemberName = sourceMemberExpression.Member.Name,
+            MemberType = sourceMemberExpression.Type,
+        };
+
+        ResolverKey destinationBinderKey = new ResolverKey
         {
-            SourceMemberName = sourceMemberExpression.Member.Name,
-            SourceMemberType = sourceMemberExpression.Type,
+            MemberName = destinationMemberExpression.Member.Name,
+            MemberType = destinationMemberExpression.Type,
         };
 
         MemberResolver<TSource, TDestination> resolver =
             new MemberResolver<TSource, TDestination>
             {
                 SourceMemberSelector = sourceMemberSelector.Compile(),
+                SourceMemberType =  sourceMemberExpression.Type,
                 DestinationProperty = destinationProperty,
-                MemberType = destinationProperty.PropertyType
+                DestinationMemberType =  destinationProperty.PropertyType
             };
 
-        if (!_resolvers.TryAdd(binderKey, resolver))
+        if (!_sourceResolvers.TryAdd(sourceBinderKey, resolver))
         {
             throw new MappingConfigurationException(
-                $"A mapping for member '{binderKey.SourceMemberName}' already exists."
+                $"A mapping for member '{sourceBinderKey.MemberName}' already exists."
+            );
+        }
+
+        if (!_destinationResolvers.TryAdd(destinationBinderKey, resolver))
+        {
+            throw new MappingConfigurationException(
+                $"A mapping for member '{destinationBinderKey.MemberName}' already exists."
             );
         }
 

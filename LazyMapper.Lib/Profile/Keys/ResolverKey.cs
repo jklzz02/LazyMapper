@@ -1,17 +1,17 @@
-namespace LazyMapper.Lib.Profile;
+namespace LazyMapper.Lib.Profile.Keys;
 
 /// <summary>
-/// Represents a key for a member.
+/// Represents a key for a resolver.
 /// </summary>
 public record ResolverKey
 {
     /// <summary>
     /// Gets the name of the source member.
     /// </summary>
-    public required string SourceMemberName { get; init; }
+    public required string MemberName { get; init; }
     
     /// <summary>
     /// Gets the type of the source member.
     /// </summary>
-    public required Type SourceMemberType { get; init; }
+    public required Type MemberType { get; init; }
 }
