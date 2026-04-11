@@ -66,8 +66,15 @@ public class Mapper
             }
             else
             {
-                object? mappedValue = MapNested(
-                    sourceProperty.GetValue(source),
+                
+                var sourceValue = sourceProperty.GetValue(source);
+                if (sourceValue == null)
+                {
+                    continue;
+                }
+                
+                object mappedValue = MapNested(
+                    sourceValue,
                     sourceProperty.PropertyType,
                     resolver?.DestinationProperty.PropertyType ?? throw new InvalidOperationException(),
                     profile
