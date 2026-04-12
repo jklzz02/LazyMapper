@@ -112,14 +112,14 @@ public class Mapper
     public IMapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>()
         where TSource : class, new()
         where TDestination : class, new()
-        => CreateMap<TSource, TDestination>(profile => { });
+        => CreateMap<TSource, TDestination>(null);
 
-    public IMapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>(Action<MapProfile<TSource, TDestination>> mapConfigurations)
+    public IMapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>(Action<MapProfile<TSource, TDestination>>? mapConfigurations)
         where TSource : class, new()
         where TDestination : class, new()
     {
         MapProfile<TSource, TDestination> profile = new MapProfile<TSource, TDestination>();
-        mapConfigurations(profile);
+        mapConfigurations?.Invoke(profile);
         
         Type sourceType = typeof(TSource);
         Type destinationType = typeof(TDestination);
@@ -231,8 +231,8 @@ public class Mapper
     => sourceProps
         .Join(
             destinationProps,
-            (src) => new { src.Name, src.PropertyType },
-            (dest) => new { dest.Name, dest.PropertyType },
+            src => new { src.Name, src.PropertyType },
+            dest => new { dest.Name, dest.PropertyType },
             (src, dest) => new {Source = src, Destination = dest}
         )
         .ToDictionary(
