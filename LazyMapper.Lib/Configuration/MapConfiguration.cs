@@ -2,7 +2,7 @@ using LazyMapper.Lib.Profile;
 
 namespace LazyMapper.Lib.Configuration;
 
-public class MapConfiguration<TSource, TDestination> : IMapConfiguration<TSource, TDestination>
+public class MapConfiguration<TSource, TDestination> : IMapConfiguration
     where TSource : class, new()
     where TDestination : class, new()
 {    

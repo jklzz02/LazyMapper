@@ -111,12 +111,12 @@ public class Mapper
         return destination;
     }
     
-    public IMapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>()
+    public IMapConfiguration CreateMap<TSource, TDestination>()
         where TSource : class, new()
         where TDestination : class, new()
         => CreateMap<TSource, TDestination>(null);
 
-    public IMapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>(
+    public IMapConfiguration CreateMap<TSource, TDestination>(
         Action<MapProfile<TSource, TDestination>>? mapConfigurations)
         where TSource : class, new()
         where TDestination : class, new()
