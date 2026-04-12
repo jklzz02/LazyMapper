@@ -26,7 +26,9 @@ public class Mapper
 
         if (profile == null)
         {
-            throw new InvalidOperationException($"Cannot map '{sourceType.FullName}' to type '{destinationType.FullName}'");
+            throw new InvalidOperationException(
+                $"Cannot map '{sourceType.FullName}' to type '{destinationType.FullName}'"
+            );
         }
 
         return (TDestination)Map(source, sourceType, destinationType, profile);
@@ -114,7 +116,8 @@ public class Mapper
         where TDestination : class, new()
         => CreateMap<TSource, TDestination>(null);
 
-    public IMapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>(Action<MapProfile<TSource, TDestination>>? mapConfigurations)
+    public IMapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>(
+        Action<MapProfile<TSource, TDestination>>? mapConfigurations)
         where TSource : class, new()
         where TDestination : class, new()
     {
