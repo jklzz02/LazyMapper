@@ -84,7 +84,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         return profile; 
     }
 
-    internal MapProfile<TSource, TDestination> AddResolver(MemberResolver resolver)
+    private MapProfile<TSource, TDestination> AddResolver(MemberResolver resolver)
     {
         ResolverKey sourceBinderKey = new ResolverKey
         { 
