@@ -10,7 +10,7 @@ namespace LazyMapper.Lib;
 public class Mapper
 {
     private readonly Dictionary<ProfileKey, IMapProfile> _profiles = new();
-    private readonly HashSet<object> _visitedSources = new (ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<object, object> _mapped = new(ReferenceEqualityComparer.Instance);
 
     public TDestination Map<TSource, TDestination>(TSource source)
         where TSource : class, new()
@@ -18,7 +18,7 @@ public class Mapper
     {
         ArgumentNullException.ThrowIfNull(source);
         
-        _visitedSources.Clear();
+        _mapped.Clear();
         Type sourceType = typeof(TSource);
         Type destinationType = typeof(TDestination);
         
@@ -34,9 +34,9 @@ public class Mapper
     
     private object Map(object source, Type sourceType, Type destType, IMapProfile profile)
     {
-        if (!_visitedSources.Add(source))
+        if (_mapped.TryGetValue(source, out var mapped))
         {
-            throw new CircularMapException(sourceType, destType);
+            return mapped;
         }
         
         PropertyInfo[] sourceProperties = ExtractMappableProperties(sourceType);
@@ -47,6 +47,7 @@ public class Mapper
             destProperties);
 
         object destination = Activator.CreateInstance(destType)!;
+        _mapped[source] = destination;
 
         foreach (var mappedProp in propMap)
         {
@@ -104,7 +105,7 @@ public class Mapper
                 resolver.DestinationProperty.SetValue(destination, mappedValue);
             }
         }
-
+        
         return destination;
     }
     

@@ -1,5 +1,4 @@
 using LazyMapper.Lib;
-using LazyMapper.Lib.Exceptions;
 using LazyMapper.Test.Objects;
 
 namespace LazyMapper.Test;
@@ -28,6 +27,36 @@ public class MapperTest
         Assert.Equal(p2.Name, p.Name);
         Assert.Equal(p2.BirthDate, p.BirthDate);
     }
+    
+    [Fact]
+    public void NestedMapSmokeTest()
+    {
+        Student student = new Student();
+        StudentArchive studentArchive = new StudentArchive();
+
+        var mapper = new Mapper();
+        mapper.CreateMap<Student, Worker>(profile =>
+        {
+            profile
+                .Bind(s => s.School, w => w.Company)
+                .Bind(s => s.Class, w => w.Position);
+        });
+        
+        mapper.CreateMap<StudentArchive, WorkerArchive>((profile) =>
+        {
+            profile.Bind(sa => sa.Student, wa => wa.Worker);
+        });
+        
+        WorkerArchive workerArchive = mapper.Map<StudentArchive, WorkerArchive>(studentArchive);
+        Assert.NotNull(workerArchive);
+        Assert.NotNull(workerArchive.Worker);
+        Assert.Equal(studentArchive.ArchiveName, workerArchive.ArchiveName);
+        Assert.Equal(student.Class, workerArchive.Worker.Position);
+        Assert.Equal(student.School, workerArchive.Worker.Company);
+        Assert.Equal(student.Name, workerArchive.Worker.Name);
+        Assert.Equal(student.Age, workerArchive.Worker.Age);
+        Assert.Equal(student.BirthDate.Date, workerArchive.Worker.BirthDate.Date);
+    }
 
     [Fact]
     public void CircularDependency_ShouldNotStackOverflow()
@@ -49,41 +78,10 @@ public class MapperTest
             profile.Bind(x => x.Parent, dto => dto.Parent);
         });
 
-        var exception = Record.Exception(() =>
-        {
-            ADto aDto = mapper.Map<A, ADto>(a);
-        });
-
-        Assert.IsType<CircularMapException>(exception);
-    }
-    
-    [Fact]
-    public void NestedMapSmokeTest()
-    {
-        Student student = new Student();
-        StudentArchive studentArchive = new StudentArchive();
-
-        var mapper = new Mapper();
-        mapper.CreateMap<Student, Worker>((profile) =>
-        {
-            profile
-                .Bind(s => s.School, w => w.Company)
-                .Bind(s => s.Class, w => w.Position);
-        });
-        
-        mapper.CreateMap<StudentArchive, WorkerArchive>((profile) =>
-        {
-            profile.Bind(sa => sa.Student, wa => wa.Worker);
-        });
-        
-        WorkerArchive workerArchive = mapper.Map<StudentArchive, WorkerArchive>(studentArchive);
-        Assert.NotNull(workerArchive);
-        Assert.NotNull(workerArchive.Worker);
-        Assert.Equal(studentArchive.ArchiveName, workerArchive.ArchiveName);
-        Assert.Equal(student.Class, workerArchive.Worker.Position);
-        Assert.Equal(student.School, workerArchive.Worker.Company);
-        Assert.Equal(student.Name, workerArchive.Worker.Name);
-        Assert.Equal(student.Age, workerArchive.Worker.Age);
-        Assert.Equal(student.BirthDate.Date, workerArchive.Worker.BirthDate.Date);
+        ADto mapped = mapper.Map<A, ADto>(a);
+        Assert.NotNull(mapped);
+        Assert.NotNull(mapped.Child);
+        Assert.NotNull(mapped.Child.Parent);
+        Assert.Equal(mapped.Child.Parent.Name, a.Child.Parent.Name);
     }
 }
