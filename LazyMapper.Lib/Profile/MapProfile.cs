@@ -10,16 +10,26 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     where TSource : class, new()
     where TDestination : class, new()
 {
-    private readonly Dictionary<ResolverKey, ResolverBase> _sourceResolvers = new();
-    private readonly Dictionary<ResolverKey, ResolverBase> _destinationResolvers = new();
+    private readonly Dictionary<ResolverKey, MemberResolver> _sourceResolvers = new();
+    private readonly Dictionary<ResolverKey, MemberResolver> _destinationResolvers = new();
+    
+    private static readonly Type SourceType = typeof(TSource);
+    private static readonly Type DestinationType = typeof(TDestination);
     
     internal MapProfile()
     {
     }
 
-    public ResolverBase? Resolver(ResolverKey binderKey)
+    public ProfileKey Key
+        => new ProfileKey
+        {
+            SourceType = SourceType,
+            DestinationType = DestinationType
+        };
+
+    public MemberResolver? Resolver(ResolverKey binderKey)
         => _sourceResolvers.GetValueOrDefault(binderKey) ?? _destinationResolvers.GetValueOrDefault(binderKey);
-    
+
     public MapProfile<TSource, TDestination> Bind(
         Expression<Func<TSource, object>> sourceMemberSelector,
         Expression<Func<TDestination, object>> destinationMemberSelector)
@@ -49,26 +59,45 @@ public class MapProfile<TSource, TDestination> : IMapProfile
                 $"'{nameof(destinationMemberSelector)}' must be a property expression, got: '{destinationMemberExpression.Member.MemberType}'."
             );
 
+        MemberResolver resolver = new MemberResolver
+        {
+            SourceProperty =  sourceProperty,
+            DestinationProperty = destinationProperty,
+        };
+        
+        AddResolver(resolver);
+        return this;
+    }
+    
+    public MapProfile<TDestination, TSource> Reverse()
+    {
+        MapProfile<TDestination, TSource> profile = new MapProfile<TDestination, TSource>();
+        foreach (var resolver in _sourceResolvers.Values)
+        {
+            profile.AddResolver(new MemberResolver
+            {
+                SourceProperty = resolver.DestinationProperty,
+                DestinationProperty = resolver.SourceProperty
+            });
+        }
+        
+        return profile; 
+    }
+
+    internal MapProfile<TSource, TDestination> AddResolver(MemberResolver resolver)
+    {
         ResolverKey sourceBinderKey = new ResolverKey
         { 
-            MemberName = sourceProperty.Name,
-            MemberType = sourceProperty.PropertyType
+            MemberName = resolver.SourceProperty.Name,
+            MemberType = resolver.SourceProperty.PropertyType
         };
 
         ResolverKey destinationBinderKey = new ResolverKey
         {
-            MemberName = destinationProperty.Name,
-            MemberType = destinationProperty.PropertyType
+            MemberName = resolver.DestinationProperty.Name,
+            MemberType = resolver.DestinationProperty.PropertyType
         };
-
-        MemberResolver<TSource, TDestination> resolver =
-            new MemberResolver<TSource, TDestination>
-            {
-                SourceMemberSelector = sourceMemberSelector.Compile(),
-                SourceMemberType =  sourceProperty.PropertyType,
-                DestinationProperty = destinationProperty,
-            };
-
+        
         if (!_sourceResolvers.TryAdd(sourceBinderKey, resolver))
         {
             throw new MappingConfigurationException(

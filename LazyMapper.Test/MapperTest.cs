@@ -14,13 +14,18 @@ public class MapperTest
         mapper.CreateMap<Person, Student>((profile) =>
         {
             profile.Bind(p => p.Name, s => s.StudentName);
-        });
+        }).ReverseMap();
         
         Student s = mapper.Map<Person, Student>(p);
         
         Assert.Equal(p.Age, s.Age);
         Assert.Equal(p.Name, s.StudentName);
         Assert.Equal(p.BirthDate, s.BirthDate);
+        
+        Person p2 = mapper.Map<Student, Person>(s);
+        Assert.Equal(p2.Age, p.Age);
+        Assert.Equal(p2.Name, p.Name);
+        Assert.Equal(p2.BirthDate, p.BirthDate);
     }
     
     [Fact]

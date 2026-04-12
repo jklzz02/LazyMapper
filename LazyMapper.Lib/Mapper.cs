@@ -1,4 +1,5 @@
 using System.Reflection;
+using LazyMapper.Lib.Configuration;
 using LazyMapper.Lib.Exceptions;
 using LazyMapper.Lib.Profile;
 using LazyMapper.Lib.Profile.Keys;
@@ -60,9 +61,9 @@ public class Mapper
                 MemberType = destinationProperty.PropertyType
             };
             
-            ResolverBase? resolver = profile.Resolver(key);
+            MemberResolver? resolver = profile.Resolver(key);
 
-            var sourceValue = resolver?.InvokeSelector(source);
+            var sourceValue = resolver?.SourceProperty.GetValue(source);
             
             if (resolver is null || sourceValue is null)
             {
@@ -76,7 +77,7 @@ public class Mapper
             else
             {
                 IMapProfile? nestedProfile = GetProfile(
-                    resolver.SourceMemberType,
+                    resolver.SourceProperty.PropertyType,
                     resolver.DestinationProperty.PropertyType);
 
                 if (nestedProfile is null)
@@ -86,7 +87,7 @@ public class Mapper
                 
                 var mappedValue = Map(
                     sourceValue,
-                    resolver.SourceMemberType,
+                    resolver.SourceProperty.PropertyType,
                     resolver.DestinationProperty.PropertyType,
                     nestedProfile
                 );
@@ -98,12 +99,12 @@ public class Mapper
         return destination;
     }
 
-    public void CreateMap<TSource, TDestination>(Action<MapProfile<TSource, TDestination>> mapConfiguration)
+    public IMapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>(Action<MapProfile<TSource, TDestination>> mapConfigurations)
         where TSource : class, new()
         where TDestination : class, new()
     {
         MapProfile<TSource, TDestination> profile = new MapProfile<TSource, TDestination>();
-        mapConfiguration(profile);
+        mapConfigurations(profile);
         
         Type sourceType = typeof(TSource);
         Type destinationType = typeof(TDestination);
@@ -118,22 +119,35 @@ public class Mapper
         {
             throw new DuplicateProfilesException(sourceType, destinationType);
         }
+        
+        return new MapConfiguration<TSource, TDestination>(this, profile);
     }
 
-    public Mapper Register<TProfile>() where TProfile : IMapProfile, new()
+    public Mapper CreateMap<TProfile>() where TProfile : IMapProfile, new()
     {
         Type type = typeof(TProfile);
+        
         if (!IsMapProfile(type))
         {
             throw new InvalidOperationException($"Cannot register type '{type.FullName}' as a profile");
         }
+
+        TProfile profile = new TProfile();
         
-        if (!_profiles.TryAdd(GetProfileKey(type), new TProfile()))
+        if (!_profiles.TryAdd(profile.Key, profile))
         {
             throw new DuplicateProfilesException(type);
         }
 
         return this;
+    }
+
+    public void Register(IMapProfile profile)
+    {
+        if (!_profiles.TryAdd(profile.Key, profile))
+        {
+            throw new DuplicateProfilesException(profile.GetType());
+        }
     }
     
     public void RegisterProfilesFromAssembly(Assembly assembly)

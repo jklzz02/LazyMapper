@@ -5,5 +5,6 @@ namespace LazyMapper.Lib.Profile;
 
 public interface IMapProfile
 {
-    public ResolverBase? Resolver(ResolverKey key);
+    internal ProfileKey Key { get; }
+    public MemberResolver? Resolver(ResolverKey key);
 }
