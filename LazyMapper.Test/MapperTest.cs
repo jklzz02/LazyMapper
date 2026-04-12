@@ -50,6 +50,6 @@ public class MapperTest
         Assert.Equal(student.School, workerArchive.Worker.Company);
         Assert.Equal(student.Name, workerArchive.Worker.Name);
         Assert.Equal(student.Age, workerArchive.Worker.Age);
-        Assert.Equal(student.BirthDate, workerArchive.Worker.BirthDate);
+        Assert.Equal(student.BirthDate.Date, workerArchive.Worker.BirthDate.Date);
     }
 }

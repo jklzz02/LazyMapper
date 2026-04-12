@@ -75,11 +75,20 @@ public class Mapper
             }
             else
             {
-                object mappedValue = MapNested(
+                IMapProfile? nestedProfile = GetProfile(
+                    resolver.SourceMemberType,
+                    resolver.DestinationProperty.PropertyType);
+
+                if (nestedProfile is null)
+                {
+                    continue;
+                }
+                
+                var mappedValue = MapNested(
                     sourceValue,
                     resolver.SourceMemberType,
-                    resolver.DestinationMemberType,
-                    profile
+                    resolver.DestinationProperty.PropertyType,
+                    nestedProfile
                 );
                 
                 resolver.DestinationProperty.SetValue(destination, mappedValue);
@@ -146,6 +155,13 @@ public class Mapper
     
     private IMapProfile? GetProfile(ProfileKey key) 
         => _profiles.GetValueOrDefault(key);
+    
+    private IMapProfile? GetProfile(Type sourceType, Type destType)
+        => _profiles.GetValueOrDefault(new ProfileKey
+        {
+            SourceType = sourceType,
+            DestinationType = destType
+        });
 
     private IMapProfile? GetProfile<TSource, TDestination>()
         where TSource : class, new()

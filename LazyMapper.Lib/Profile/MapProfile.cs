@@ -16,9 +16,6 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     internal MapProfile()
     {
     }
-    
-    internal bool HasResolver(ResolverKey key)
-        => _sourceResolvers.ContainsKey(key) ||  _destinationResolvers.ContainsKey(key);
 
     public ResolverBase? Resolver(ResolverKey binderKey)
         => _sourceResolvers.GetValueOrDefault(binderKey) ?? _destinationResolvers.GetValueOrDefault(binderKey);
@@ -40,30 +37,36 @@ public class MapProfile<TSource, TDestination> : IMapProfile
                 $"'{nameof(destinationMemberSelector)}' must be a member expression, got: '{destinationMemberSelector.Body}'."
             );
         
+        if (sourceMemberExpression.Member is not PropertyInfo sourceProperty)
+        {
+            throw new MappingConfigurationException(
+                $"'{nameof(sourceMemberSelector)}' must be a property expression, got: '{destinationMemberExpression.Member.MemberType}'."
+            );
+        }
+        
         if (destinationMemberExpression.Member is not PropertyInfo destinationProperty)
             throw new MappingConfigurationException(
                 $"'{nameof(destinationMemberSelector)}' must be a property expression, got: '{destinationMemberExpression.Member.MemberType}'."
             );
-        
+
         ResolverKey sourceBinderKey = new ResolverKey
         { 
-            MemberName = sourceMemberExpression.Member.Name,
-            MemberType = sourceMemberExpression.Type,
+            MemberName = sourceProperty.Name,
+            MemberType = sourceProperty.PropertyType
         };
 
         ResolverKey destinationBinderKey = new ResolverKey
         {
-            MemberName = destinationMemberExpression.Member.Name,
-            MemberType = destinationMemberExpression.Type,
+            MemberName = destinationProperty.Name,
+            MemberType = destinationProperty.PropertyType
         };
 
         MemberResolver<TSource, TDestination> resolver =
             new MemberResolver<TSource, TDestination>
             {
                 SourceMemberSelector = sourceMemberSelector.Compile(),
-                SourceMemberType =  sourceMemberExpression.Type,
+                SourceMemberType =  sourceProperty.PropertyType,
                 DestinationProperty = destinationProperty,
-                DestinationMemberType =  destinationProperty.PropertyType
             };
 
         if (!_sourceResolvers.TryAdd(sourceBinderKey, resolver))
