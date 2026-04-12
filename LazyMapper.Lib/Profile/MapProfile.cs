@@ -31,8 +31,8 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         => _sourceResolvers.GetValueOrDefault(binderKey) ?? _destinationResolvers.GetValueOrDefault(binderKey);
 
     public MapProfile<TSource, TDestination> Bind(
-        Expression<Func<TSource, object>> sourceMemberSelector,
-        Expression<Func<TDestination, object>> destinationMemberSelector)
+        Expression<Func<TSource, object?>> sourceMemberSelector,
+        Expression<Func<TDestination, object?>> destinationMemberSelector)
     {
         ArgumentNullException.ThrowIfNull(sourceMemberSelector);
         ArgumentNullException.ThrowIfNull(destinationMemberSelector);
@@ -84,7 +84,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         return profile; 
     }
 
-    private MapProfile<TSource, TDestination> AddResolver(MemberResolver resolver)
+    private void AddResolver(MemberResolver resolver)
     {
         ResolverKey sourceBinderKey = new ResolverKey
         { 
@@ -111,7 +111,5 @@ public class MapProfile<TSource, TDestination> : IMapProfile
                 $"A mapping for member '{destinationBinderKey.MemberName}' already exists."
             );
         }
-
-        return this;
     }
 }

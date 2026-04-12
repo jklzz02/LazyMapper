@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
-        <RootNamespace>LazyMapping.Test</RootNamespace>
+        <RootNamespace>LazyMapper.Test</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

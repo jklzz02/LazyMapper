@@ -1,7 +1,8 @@
 using LazyMapper.Lib;
+using LazyMapper.Lib.Exceptions;
 using LazyMapper.Test.Objects;
 
-namespace LazyMapping.Test;
+namespace LazyMapper.Test;
 
 public class MapperTest
 {
@@ -26,6 +27,34 @@ public class MapperTest
         Assert.Equal(p2.Age, p.Age);
         Assert.Equal(p2.Name, p.Name);
         Assert.Equal(p2.BirthDate, p.BirthDate);
+    }
+
+    [Fact]
+    public void CircularDependency_ShouldNotStackOverflow()
+    {
+        var a = new A { Name = "NodeA" };
+        var b = new B { Title = "NodeB", Parent = a };
+        a.Child = b;
+        b.Parent = a;
+
+        var mapper = new Mapper();
+    
+        mapper.CreateMap<A, ADto>((profile) =>
+        {
+            profile.Bind(x => x.Child, dto => dto.Child);
+        });
+    
+        mapper.CreateMap<B, BDto>((profile) =>
+        {
+            profile.Bind(x => x.Parent, dto => dto.Parent);
+        });
+
+        var exception = Record.Exception(() =>
+        {
+            ADto aDto = mapper.Map<A, ADto>(a);
+        });
+
+        Assert.IsType<CircularMapException>(exception);
     }
     
     [Fact]

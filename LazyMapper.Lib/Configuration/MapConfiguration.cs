@@ -16,7 +16,11 @@ public class MapConfiguration<TSource, TDestination> : IMapConfiguration<TSource
     }
     
     public IMapConfiguration<TSource, TDestination> CreateMap(Action<MapProfile<TSource, TDestination>> mapConfigurations)
-        => _mapper.CreateMap<TSource, TDestination>(mapConfigurations);
+        => _mapper.CreateMap(mapConfigurations);
+
+    public IMapConfiguration<TSource, TDestination> CreateMap()
+        => _mapper.CreateMap<TSource, TDestination>();
+    
 
     public void ReverseMap()
     {
