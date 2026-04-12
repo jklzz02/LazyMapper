@@ -24,10 +24,10 @@ public class Mapper
             throw new InvalidOperationException($"Cannot map '{sourceType.FullName}' to type '{destinationType.FullName}'");
         }
 
-        return (TDestination)MapNested(source, sourceType, destinationType, profile);
+        return (TDestination)Map(source, sourceType, destinationType, profile);
     }
     
-    private object MapNested(object source, Type sourceType, Type destType, IMapProfile profile)
+    private object Map(object source, Type sourceType, Type destType, IMapProfile profile)
     {
         PropertyInfo[] sourceProperties = ExtractMappableProperties(sourceType);
         PropertyInfo[] destProperties = ExtractMappableProperties(destType);
@@ -84,7 +84,7 @@ public class Mapper
                     continue;
                 }
                 
-                var mappedValue = MapNested(
+                var mappedValue = Map(
                     sourceValue,
                     resolver.SourceMemberType,
                     resolver.DestinationProperty.PropertyType,
