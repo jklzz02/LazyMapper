@@ -123,7 +123,7 @@ public class Mapper
         return new MapConfiguration<TSource, TDestination>(this, profile);
     }
 
-    public Mapper CreateMap<TProfile>() where TProfile : IMapProfile, new()
+    public void Register<TProfile>() where TProfile : IMapProfile, new()
     {
         Type type = typeof(TProfile);
         
@@ -138,8 +138,6 @@ public class Mapper
         {
             throw new DuplicateProfilesException(type);
         }
-
-        return this;
     }
 
     public void Register(IMapProfile profile)
@@ -187,14 +185,7 @@ public class Mapper
             DestinationType = typeof(TDestination)
         };
         
-        var profile = _profiles.GetValueOrDefault(key);
-        
-        if (profile is MapProfile<TSource, TDestination> mapProfile)
-        {
-            return mapProfile;
-        }
-
-        return null;
+        return _profiles.GetValueOrDefault(key);
     }
 
     private IMapProfile InstantiateProfile(Type profileType)

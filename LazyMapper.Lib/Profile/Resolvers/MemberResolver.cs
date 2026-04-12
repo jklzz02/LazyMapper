@@ -9,6 +9,8 @@ public class MemberResolver
     
     public required PropertyInfo SourceProperty { get; init; }
     
-    public bool IsNestedResolution
-        => SourceProperty.PropertyType != DestinationProperty.PropertyType;
+    public bool IsNestedResolution => 
+        SourceProperty.PropertyType != DestinationProperty.PropertyType &&
+        !DestinationProperty.PropertyType.IsValueType &&
+        DestinationProperty.PropertyType != typeof(string);
 }
