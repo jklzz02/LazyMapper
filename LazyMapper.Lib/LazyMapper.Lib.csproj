@@ -7,8 +7,4 @@
         <RootNamespace>LazyMapper.Lib</RootNamespace>
     </PropertyGroup>
 
-    <ItemGroup>
-      <Folder Include="Extensions\" />
-    </ItemGroup>
-
 </Project>
