@@ -1,6 +1,7 @@
 using System.Reflection;
 using LazyMapper.Lib.Configuration;
 using LazyMapper.Lib.Exceptions;
+using LazyMapper.Lib.Extensions;
 using LazyMapper.Lib.Profile;
 using LazyMapper.Lib.Profile.Keys;
 using LazyMapper.Lib.Profile.Resolvers;
@@ -64,7 +65,7 @@ public class Mapper
         {
             return destination;
         }
-        
+
         foreach (PropertyInfo destinationProperty in unmappedProperties)
         {
             ResolverKey key = new ResolverKey
@@ -72,42 +73,81 @@ public class Mapper
                 MemberName = destinationProperty.Name,
                 MemberType = destinationProperty.PropertyType
             };
-            
+        
             MemberResolver? resolver = profile.Resolver(key);
 
             var sourceValue = resolver?.SourceProperty.GetValue(source);
-            
+        
             if (resolver is null || sourceValue is null)
             {
+                continue;
+            }
+
+            if (resolver.SourceProperty.PropertyType.IsCollection())
+            {
+                Type? sourceElementType = resolver.SourceProperty.PropertyType.CollectionElementType();
+                Type? destElementType = resolver.DestinationProperty.PropertyType.CollectionElementType();
+                
+                if (sourceElementType == null || destElementType == null)
+                {
+                    continue;
+                }
+
+                IMapProfile? elementProfile = GetProfile(sourceElementType, destElementType);
+                
+                if (elementProfile is null)
+                {
+                    continue;
+                }
+
+                var extractedCollection = CollectionHandler
+                    .ExtractCollectionItems(
+                        sourceValue,
+                        resolver.SourceProperty.PropertyType);
+            
+                var mappedCollection = extractedCollection
+                    .Select(item => Map(
+                        item.Value,
+                        sourceElementType,
+                        destElementType,
+                        elementProfile))
+                    .ToList();
+            
+                var reconstructedCollection = CollectionHandler
+                    .ReconstructCollection(
+                        mappedCollection,
+                        destElementType,
+                        resolver.DestinationProperty.PropertyType);
+            
+                resolver.DestinationProperty.SetValue(destination, reconstructedCollection);
                 continue;
             }
 
             if (!resolver.IsNestedResolution)
             {
                 destinationProperty.SetValue(destination, sourceValue);
+                continue;
             }
-            else
-            {
-                IMapProfile? nestedProfile = GetProfile(
-                    resolver.SourceProperty.PropertyType,
-                    resolver.DestinationProperty.PropertyType);
 
-                if (nestedProfile is null)
-                {
-                    continue;
-                }
-                
-                var mappedValue = Map(
-                    sourceValue,
-                    resolver.SourceProperty.PropertyType,
-                    resolver.DestinationProperty.PropertyType,
-                    nestedProfile
-                );
-                
-                resolver.DestinationProperty.SetValue(destination, mappedValue);
+            IMapProfile? nestedProfile = GetProfile(
+                resolver.SourceProperty.PropertyType,
+                resolver.DestinationProperty.PropertyType);
+
+            if (nestedProfile is null)
+            {
+                continue;
             }
+            
+            var mappedValue = Map(
+                sourceValue,
+                resolver.SourceProperty.PropertyType,
+                resolver.DestinationProperty.PropertyType,
+                nestedProfile
+            );
+            
+            resolver.DestinationProperty.SetValue(destination, mappedValue);
         }
-        
+    
         return destination;
     }
     
