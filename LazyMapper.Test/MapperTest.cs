@@ -11,7 +11,7 @@ public class MapperTest
         Person p = new Person();
 
         var mapper = new Mapper();
-        mapper.CreateMap<Person, Student>((profile) =>
+        mapper.CreateMap<Person, Student>(profile =>
         {
             profile.Bind(p => p.Name, s => s.StudentName);
         }).ReverseMap();
