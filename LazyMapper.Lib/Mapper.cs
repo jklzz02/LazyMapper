@@ -82,45 +82,19 @@ public class Mapper
             {
                 continue;
             }
-
+            
             if (resolver.SourceProperty.PropertyType.IsCollection())
             {
-                Type? sourceElementType = resolver.SourceProperty.PropertyType.CollectionElementType();
-                Type? destElementType = resolver.DestinationProperty.PropertyType.CollectionElementType();
-                
-                if (sourceElementType == null || destElementType == null)
+                var result = MapCollection(
+                    sourceValue,
+                    resolver.SourceProperty.PropertyType,
+                    resolver.DestinationProperty.PropertyType);
+
+                if (result is null)
                 {
                     continue;
                 }
-
-                IMapProfile? elementProfile = GetProfile(sourceElementType, destElementType);
-                
-                if (elementProfile is null)
-                {
-                    continue;
-                }
-
-                var extractedCollection = CollectionHandler
-                    .ExtractCollectionItems(
-                        sourceValue,
-                        resolver.SourceProperty.PropertyType);
-            
-                var mappedCollection = extractedCollection
-                    .Select(item => Map(
-                        item.Value,
-                        sourceElementType,
-                        destElementType,
-                        elementProfile))
-                    .ToList();
-            
-                var reconstructedCollection = CollectionHandler
-                    .ReconstructCollection(
-                        mappedCollection,
-                        destElementType,
-                        resolver.DestinationProperty.PropertyType);
-            
-                resolver.DestinationProperty.SetValue(destination, reconstructedCollection);
-                continue;
+                resolver.DestinationProperty.SetValue(destination, result);
             }
 
             if (!resolver.IsNestedResolution)
@@ -149,6 +123,43 @@ public class Mapper
         }
     
         return destination;
+    }
+    
+    private object? MapCollection(
+        object sourceValue,
+        Type sourceCollectionType,
+        Type destCollectionType)
+    {
+        Type? sourceElementType = sourceCollectionType.CollectionElementType();
+        Type? destElementType   = destCollectionType.CollectionElementType();
+
+        if (sourceElementType == null || destElementType == null)
+            return null;
+
+        var items = CollectionHandler.ExtractCollectionItems(sourceValue, sourceCollectionType);
+
+        List<object> mappedItems;
+
+        if (sourceElementType.IsCollection())
+        {
+            mappedItems = items
+                .Select(item => MapCollection(item.Value, sourceElementType, destElementType))
+                .Where(x => x != null)
+                .Select(x => x!)
+                .ToList();
+        }
+        else
+        {
+            IMapProfile? elementProfile = GetProfile(sourceElementType, destElementType);
+            if (elementProfile is null)
+                return null;
+
+            mappedItems = items
+                .Select(item => Map(item.Value, sourceElementType, destElementType, elementProfile))
+                .ToList();
+        }
+
+        return CollectionHandler.ReconstructCollection(mappedItems, destElementType, destCollectionType);
     }
     
     public IMapConfiguration CreateMap<TSource, TDestination>()
