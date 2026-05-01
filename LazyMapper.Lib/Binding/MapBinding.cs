@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace LazyMapper.Lib.Profile.Binding;
+namespace LazyMapper.Lib.Binding;
 
 public class MapBinding
 {

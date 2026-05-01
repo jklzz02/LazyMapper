@@ -1,6 +1,6 @@
 using System.Reflection;
+using LazyMapper.Lib.Binding;
 using LazyMapper.Lib.Profile.Keys;
-using LazyMapper.Lib.Profile.Binding;
 
 namespace LazyMapper.Lib.Profile;
 

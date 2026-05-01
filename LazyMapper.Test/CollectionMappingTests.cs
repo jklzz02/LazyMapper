@@ -257,8 +257,8 @@ public class CollectionMappingTest
         Assert.Equal("Database Systems", result.Teachers[0].Courses[0].Name);
         Assert.Equal(4, result.Teachers[0].Courses[0].Credits);
         
+        Assert.Single(result.Teachers[1].Courses);
         Assert.Equal("Dr. Brown", result.Teachers[1].Name);
-        Assert.Equal(1, result.Teachers[1].Courses.Count);
         Assert.Equal("Operating Systems", result.Teachers[1].Courses[0].Name);
         Assert.Equal(5, result.Teachers[1].Courses[0].Credits);
     }

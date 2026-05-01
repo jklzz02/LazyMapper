@@ -2,9 +2,9 @@ using System.Reflection;
 using LazyMapper.Lib.Configuration;
 using LazyMapper.Lib.Exceptions;
 using LazyMapper.Lib.Extensions;
+using LazyMapper.Lib.Binding;
 using LazyMapper.Lib.Profile;
 using LazyMapper.Lib.Profile.Keys;
-using LazyMapper.Lib.Profile.Binding;
 
 namespace LazyMapper.Lib;
 
@@ -54,18 +54,20 @@ public class Mapper
             return mapped;
         }
         
-        IEnumerable<MapBinding> resolvers =  sourceType.BindProperties(destType, profile).ToList();
+        IEnumerable<MapBinding> bindings =  ByConventionBinder
+            .BuildBindings(sourceType, destType, profile)
+            .ToList();
 
         object destination = Activator.CreateInstance(destType)!;
         _mapped[source] = destination;
 
-        foreach (MapBinding resolver in resolvers)
+        foreach (MapBinding resolver in bindings)
         {
             resolver.DestinationProperty.SetValue(destination, resolver.SourceProperty.GetValue(source));
         }
         
         PropertyInfo[] unmappedProperties = destType.GetProperties()
-            .Except(resolvers.Select(r => r.DestinationProperty))
+            .Except(bindings.Select(r => r.DestinationProperty))
             .ToArray();
 
         if (unmappedProperties.Length == 0)
