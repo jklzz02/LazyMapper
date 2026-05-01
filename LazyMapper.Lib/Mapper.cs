@@ -86,8 +86,14 @@ public class Mapper
             MapBinding? resolver = profile.Binding(key);
 
             var sourceValue = resolver?.SourceProperty.GetValue(source);
+
+            if (sourceValue is null)
+            {
+                destinationProperty.SetValue(destination, null);
+                continue;
+            }
         
-            if (resolver is null || sourceValue is null)
+            if (resolver is null)
             {
                 continue;
             }

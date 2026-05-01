@@ -21,6 +21,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\LazyMapper.Lib\LazyMapper.Lib.csproj" />
+      <ProjectReference Include="..\LazyMapper.TestFixtures\LazyMapper.TestFixtures.csproj" />
     </ItemGroup>
 
 </Project>
