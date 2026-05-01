@@ -27,7 +27,7 @@ public class MapperTest
         Assert.Equal(p2.Name, p.Name);
         Assert.Equal(p2.BirthDate, p.BirthDate);
     }
-
+    
     [Fact]
     public void CollectionSmokeTest()
     {
@@ -49,6 +49,30 @@ public class MapperTest
         Assert.Equal("1", students[0].StudentName);
         Assert.Equal("3", students[1].StudentName);
     }
+
+    [Fact]
+    public void IgnoredProperty_ShouldNotBeMapped()
+    {
+        Person person = new Person
+        {
+            Surname = "Should not be mapped"
+        };
+        
+        Mapper mapper = new Mapper();
+        mapper.CreateMap<Person, Student>(profile =>
+        {
+            profile.Bind(p => p.Name, s => s.StudentName);
+            profile.Ignore(p => p.Surname);
+        });
+        
+        Student student = mapper.Map<Person, Student>(person);
+        
+        Assert.Equal(person.Age, student.Age);
+        Assert.Equal(person.Name, student.StudentName);
+        Assert.Equal(person.BirthDate, student.BirthDate);
+        Assert.NotEqual(person.Surname, student.Surname);
+    }
+
     
     [Fact]
     public void NestedMapSmokeTest()
@@ -90,7 +114,7 @@ public class MapperTest
 
         var mapper = new Mapper();
     
-        mapper.CreateMap<A, ADto>((profile) =>
+        mapper.CreateMap<A, ADto>(profile =>
         {
             profile.Bind(x => x.Child, dto => dto.Child);
         });

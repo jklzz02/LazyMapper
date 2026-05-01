@@ -12,6 +12,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
 {
     private readonly Dictionary<ResolverKey, MemberResolver> _sourceResolvers = new();
     private readonly Dictionary<ResolverKey, MemberResolver> _destinationResolvers = new();
+    private readonly HashSet<PropertyInfo> _ignored = [];
     
     private static readonly Type SourceType = typeof(TSource);
     private static readonly Type DestinationType = typeof(TDestination);
@@ -27,6 +28,9 @@ public class MapProfile<TSource, TDestination> : IMapProfile
             DestinationType = DestinationType
         };
 
+    public bool IsIgnored(PropertyInfo propertyInfo)
+        => _ignored.Contains(propertyInfo);
+
     public MemberResolver? Resolver(ResolverKey binderKey)
         => _sourceResolvers.GetValueOrDefault(binderKey) ?? _destinationResolvers.GetValueOrDefault(binderKey);
 
@@ -36,33 +40,11 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     {
         ArgumentNullException.ThrowIfNull(sourceMemberSelector);
         ArgumentNullException.ThrowIfNull(destinationMemberSelector);
-        
-         if (sourceMemberSelector.Body is not MemberExpression sourceMemberExpression)
-             throw new MappingConfigurationException(
-                 $"'{nameof(sourceMemberSelector)}' must be a member expression, got: '{sourceMemberSelector}'."
-             );
-
-        if (destinationMemberSelector.Body is not MemberExpression destinationMemberExpression)
-            throw new MappingConfigurationException(
-                $"'{nameof(destinationMemberSelector)}' must be a member expression, got: '{destinationMemberSelector.Body}'."
-            );
-        
-        if (sourceMemberExpression.Member is not PropertyInfo sourceProperty)
-        {
-            throw new MappingConfigurationException(
-                $"'{nameof(sourceMemberSelector)}' must be a property expression, got: '{destinationMemberExpression.Member.MemberType}'."
-            );
-        }
-        
-        if (destinationMemberExpression.Member is not PropertyInfo destinationProperty)
-            throw new MappingConfigurationException(
-                $"'{nameof(destinationMemberSelector)}' must be a property expression, got: '{destinationMemberExpression.Member.MemberType}'."
-            );
 
         MemberResolver resolver = new MemberResolver
         {
-            SourceProperty =  sourceProperty,
-            DestinationProperty = destinationProperty,
+            SourceProperty =  ExtractProperty(sourceMemberSelector.Body),
+            DestinationProperty = ExtractProperty(destinationMemberSelector.Body)
         };
         
         AddResolver(resolver);
@@ -84,8 +66,41 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         return profile; 
     }
 
+    public MapProfile<TSource, TDestination> Ignore(Expression<Func<TSource, object?>> memberSelector)
+    {
+        ArgumentNullException.ThrowIfNull(memberSelector);
+        
+        PropertyInfo property = ExtractProperty(memberSelector.Body);
+
+        _ignored.Add(property);
+        _sourceResolvers.Remove(new ResolverKey
+        {
+            MemberName = property.Name,
+            MemberType = property.PropertyType
+        });
+
+        return this;
+    }
+    
+    private static PropertyInfo ExtractProperty(Expression expression)
+    {
+        if (expression is not MemberExpression memberExpression)
+            throw new MappingConfigurationException(
+                $"'{nameof(expression)}' must be a member expression, got: '{expression.NodeType}'."
+            );
+        
+        if (memberExpression.Member is not PropertyInfo property)
+            throw new MappingConfigurationException(
+                $"'{nameof(expression)}' must be a property expression, got: '{memberExpression.Member.MemberType}'."
+            );
+        
+        return property;
+    }
+
     private void AddResolver(MemberResolver resolver)
     {
+        ArgumentNullException.ThrowIfNull(resolver);
+        
         ResolverKey sourceBinderKey = new ResolverKey
         { 
             MemberName = resolver.SourceProperty.Name,
@@ -97,7 +112,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
             MemberName = resolver.DestinationProperty.Name,
             MemberType = resolver.DestinationProperty.PropertyType
         };
-        
+
         if (!_sourceResolvers.TryAdd(sourceBinderKey, resolver))
         {
             throw new MappingConfigurationException(
@@ -110,6 +125,6 @@ public class MapProfile<TSource, TDestination> : IMapProfile
             throw new MappingConfigurationException(
                 $"A mapping for member '{destinationBinderKey.MemberName}' already exists."
             );
-        }
+        }   
     }
 }

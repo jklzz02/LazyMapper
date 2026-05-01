@@ -49,9 +49,9 @@ public class Mapper
         {
             return mapped;
         }
-        
-        PropertyInfo[] sourceProperties = ExtractMappableProperties(sourceType);
-        PropertyInfo[] destProperties = ExtractMappableProperties(destType);
+
+        PropertyInfo[] sourceProperties = ExtractMappableProperties(sourceType, profile);
+        PropertyInfo[] destProperties = ExtractMappableProperties(destType, profile);
         
         Dictionary<PropertyInfo, PropertyInfo> propMap = CreatePropertyMap(
             sourceProperties, 
@@ -301,9 +301,17 @@ public class Mapper
             pair => pair.Source,
             pair => pair.Destination);
     
-    private PropertyInfo[] ExtractMappableProperties(Type type)
+    private PropertyInfo[] ExtractMappableProperties(Type type, IMapProfile? profile = null)
         => type.GetProperties()
-            .Where(p => p is { CanRead: true, CanWrite: true })
+            .Where(p =>
+            {
+                if (profile != null && profile.IsIgnored(p))
+                {
+                    return false;
+                }
+
+                return p is { CanRead: true, CanWrite: true };
+            })
             .ToArray();
     
     private bool IsMapProfile(Type type)
