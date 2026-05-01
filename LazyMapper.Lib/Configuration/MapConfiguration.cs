@@ -23,6 +23,7 @@ public class MapConfiguration<TSource, TDestination>
 
     public MapConfiguration<TSource, TDestination> BeforeMap(Action<TSource> action)
     {
+        _profile.RegisterBeforeMapHook(action);
         return this;
     }
 

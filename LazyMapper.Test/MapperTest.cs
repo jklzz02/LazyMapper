@@ -51,6 +51,34 @@ public class MapperTest
     }
 
     [Fact]
+    public void BeforeMapHook_ShouldRunBeforeMapping()
+    {
+        Person person = new Person();
+        Mapper mapper = new Mapper();
+
+        mapper.CreateMap<Person, Student>(profile => profile.Bind(p => p.Name, s => s.StudentName))
+            .BeforeMap(p => p.Name = "Before hook Name");
+        
+        Student student = mapper.Map<Person, Student>(person);
+        
+        Assert.Equal("Before hook Name", student.StudentName);
+    }
+
+    [Fact]
+    public void AfterMapHook_ShouldRunAfterMapping()
+    {
+        Person person = new Person();
+        Mapper mapper = new Mapper();
+        
+        mapper.CreateMap<Person, Student>(profile => profile.Bind(p => p.Name, s => s.StudentName))
+            .AfterMap((p, s) => s.BirthDate = p.BirthDate - TimeSpan.FromDays(1));
+        
+        Student student = mapper.Map<Person, Student>(person);
+        
+        Assert.Equal(person.BirthDate - TimeSpan.FromDays(1), student.BirthDate);
+    }
+
+    [Fact]
     public void IgnoredProperty_ShouldNotBeMapped()
     {
         Person person = new Person
