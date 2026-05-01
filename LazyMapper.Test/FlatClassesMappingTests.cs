@@ -108,4 +108,27 @@ public class FlatClassesMappingTests
             Assert.Equal(r.Expected.IsActive, r.Actual.IsActive);
         });
     }
+    
+    [Fact]
+    public void Ignored_Property_Should_Not_Be_Mapped()
+    {
+        Customer source = new Customer
+        {
+            Id = 1,
+            FirstName = "John",
+        };
+        
+        Mapper mapper = new();
+        mapper.CreateMap<Customer, CustomerDto>(profile =>
+        {
+            profile
+                .Bind(s => s.FirstName, d => d.GivenName)
+                .Ignore(s => s.Id);
+        });
+        
+        CustomerDto result = mapper.Map<Customer, CustomerDto>(source);
+        
+        Assert.Equal(source.FirstName, result.GivenName);
+        Assert.NotEqual(source.Id, result.Id);
+    }
 }

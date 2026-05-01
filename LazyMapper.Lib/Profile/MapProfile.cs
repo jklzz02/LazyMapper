@@ -54,7 +54,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         return this;
     }
     
-    public MapProfile<TSource, TDestination> Ignore(Expression<Func<TSource, object?>> memberSelector)
+    public MapProfile<TSource, TDestination> Ignore<TMember>(Expression<Func<TSource, TMember>> memberSelector)
     {
         ArgumentNullException.ThrowIfNull(memberSelector);
         
