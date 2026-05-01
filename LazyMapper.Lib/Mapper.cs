@@ -34,6 +34,14 @@ public class Mapper
 
         return (TDestination)Map(source, sourceType, destinationType, profile);
     }
+
+    public IEnumerable<TDestination> Map<TSource, TDestination>(IEnumerable<TSource> source)
+        where TSource : class, new()
+        where TDestination : class, new()
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        return source.Select(Map<TSource, TDestination>);
+    }
     
     private object Map(object source, Type sourceType, Type destType, IMapProfile profile)
     {

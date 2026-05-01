@@ -27,6 +27,28 @@ public class MapperTest
         Assert.Equal(p2.Name, p.Name);
         Assert.Equal(p2.BirthDate, p.BirthDate);
     }
+
+    [Fact]
+    public void CollectionSmokeTest()
+    {
+        List<Person> people = 
+        [
+            new Person { Name = "1", Surname = "2" },
+            new Person { Name = "3", Surname = "4" }
+        ];
+        
+        Mapper mapper = new Mapper();
+        mapper.CreateMap<Person, Student>(profile =>
+        {
+            profile.Bind(p => p.Name, s => s.StudentName);
+        });
+        
+        List<Student> students = mapper.Map<Person, Student>(people).ToList();
+        
+        Assert.Equal(2, students.Count);
+        Assert.Equal("1", students[0].StudentName);
+        Assert.Equal("3", students[1].StudentName);
+    }
     
     [Fact]
     public void NestedMapSmokeTest()
