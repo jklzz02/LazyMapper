@@ -1,9 +1,9 @@
-namespace LazyMapper.Lib.Profile.Keys;
+namespace LazyMapper.Lib.Profile.Binding;
 
 /// <summary>
-/// Represents a key for a resolver.
+/// Represents a key for a binding.
 /// </summary>
-public record ResolverKey
+public record BindingKey
 {
     /// <summary>
     /// Gets the name of the source member.

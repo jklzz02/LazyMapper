@@ -1,6 +1,6 @@
 using System.Reflection;
 using LazyMapper.Lib.Profile.Keys;
-using LazyMapper.Lib.Profile.Resolvers;
+using LazyMapper.Lib.Profile.Binding;
 
 namespace LazyMapper.Lib.Profile;
 
@@ -10,7 +10,7 @@ internal interface IMapProfile
     
     bool IsIgnored(PropertyInfo sourceProperty);
     
-    MemberResolver? Resolver(ResolverKey key);
+    MapBinding? Binding(BindingKey key);
     
     void InvokeBeforeMap(object source);
     

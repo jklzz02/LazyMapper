@@ -4,7 +4,7 @@ using LazyMapper.Lib.Exceptions;
 using LazyMapper.Lib.Extensions;
 using LazyMapper.Lib.Profile;
 using LazyMapper.Lib.Profile.Keys;
-using LazyMapper.Lib.Profile.Resolvers;
+using LazyMapper.Lib.Profile.Binding;
 
 namespace LazyMapper.Lib;
 
@@ -53,24 +53,19 @@ public class Mapper
         {
             return mapped;
         }
-
-        PropertyInfo[] sourceProperties = ExtractMappableProperties(sourceType, profile);
-        PropertyInfo[] destProperties = ExtractMappableProperties(destType, profile);
         
-        Dictionary<PropertyInfo, PropertyInfo> propMap = CreatePropertyMap(
-            sourceProperties, 
-            destProperties);
+        IEnumerable<MapBinding> resolvers =  sourceType.BindProperties(destType, profile).ToList();
 
         object destination = Activator.CreateInstance(destType)!;
         _mapped[source] = destination;
 
-        foreach (var mappedProp in propMap)
+        foreach (MapBinding resolver in resolvers)
         {
-            mappedProp.Value.SetValue(destination, mappedProp.Key.GetValue(source));
+            resolver.DestinationProperty.SetValue(destination, resolver.SourceProperty.GetValue(source));
         }
         
-        PropertyInfo[] unmappedProperties = destProperties
-            .Except(propMap.Values)
+        PropertyInfo[] unmappedProperties = destType.GetProperties()
+            .Except(resolvers.Select(r => r.DestinationProperty))
             .ToArray();
 
         if (unmappedProperties.Length == 0)
@@ -80,13 +75,13 @@ public class Mapper
 
         foreach (PropertyInfo destinationProperty in unmappedProperties)
         {
-            ResolverKey key = new ResolverKey
+            BindingKey key = new BindingKey
             {
                 MemberName = destinationProperty.Name,
                 MemberType = destinationProperty.PropertyType
             };
         
-            MemberResolver? resolver = profile.Resolver(key);
+            MapBinding? resolver = profile.Binding(key);
 
             var sourceValue = resolver?.SourceProperty.GetValue(source);
         
@@ -295,33 +290,6 @@ public class Mapper
             DestinationType = genericArguments[1]
         };
     }
-
-    private Dictionary<PropertyInfo, PropertyInfo> CreatePropertyMap(
-        PropertyInfo[] sourceProps,
-        PropertyInfo[] destinationProps)
-    => sourceProps
-        .Join(
-            destinationProps,
-            src => new { src.Name, src.PropertyType },
-            dest => new { dest.Name, dest.PropertyType },
-            (src, dest) => new {Source = src, Destination = dest}
-        )
-        .ToDictionary(
-            pair => pair.Source,
-            pair => pair.Destination);
-    
-    private PropertyInfo[] ExtractMappableProperties(Type type, IMapProfile? profile = null)
-        => type.GetProperties()
-            .Where(p =>
-            {
-                if (profile != null && profile.IsIgnored(p))
-                {
-                    return false;
-                }
-
-                return p is { CanRead: true, CanWrite: true };
-            })
-            .ToArray();
     
     private static bool IsMapProfile(Type type)
         => type.BaseType is { IsGenericType: true } baseType 

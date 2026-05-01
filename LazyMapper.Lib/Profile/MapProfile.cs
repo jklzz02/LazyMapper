@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using LazyMapper.Lib.Exceptions;
 using LazyMapper.Lib.Profile.Keys;
-using LazyMapper.Lib.Profile.Resolvers;
+using LazyMapper.Lib.Profile.Binding;
 
 namespace LazyMapper.Lib.Profile;
 
@@ -10,8 +10,8 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     where TSource : class, new()
     where TDestination : class, new()
 {
-    private readonly Dictionary<ResolverKey, MemberResolver> _sourceResolvers = new();
-    private readonly Dictionary<ResolverKey, MemberResolver> _destinationResolvers = new();
+    private readonly Dictionary<BindingKey, MapBinding> _sourceResolvers = new();
+    private readonly Dictionary<BindingKey, MapBinding> _destinationResolvers = new();
     private readonly HashSet<PropertyInfo> _ignored = [];
     
     private static readonly Type SourceType = typeof(TSource);
@@ -34,7 +34,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     bool IMapProfile.IsIgnored(PropertyInfo propertyInfo)
         => _ignored.Contains(propertyInfo);
 
-    MemberResolver? IMapProfile.Resolver(ResolverKey binderKey)
+    MapBinding? IMapProfile.Binding(BindingKey binderKey)
         => _sourceResolvers.GetValueOrDefault(binderKey) ?? _destinationResolvers.GetValueOrDefault(binderKey);
 
     public MapProfile<TSource, TDestination> Bind(
@@ -44,13 +44,13 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         ArgumentNullException.ThrowIfNull(sourceMemberSelector);
         ArgumentNullException.ThrowIfNull(destinationMemberSelector);
 
-        MemberResolver resolver = new MemberResolver
+        MapBinding binding = new MapBinding
         {
             SourceProperty =  ExtractProperty(sourceMemberSelector.Body),
             DestinationProperty = ExtractProperty(destinationMemberSelector.Body)
         };
         
-        AddResolver(resolver);
+        AddResolver(binding);
         return this;
     }
     
@@ -61,7 +61,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         PropertyInfo property = ExtractProperty(memberSelector.Body);
 
         _ignored.Add(property);
-        _sourceResolvers.Remove(new ResolverKey
+        _sourceResolvers.Remove(new BindingKey
         {
             MemberName = property.Name,
             MemberType = property.PropertyType
@@ -75,7 +75,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         MapProfile<TDestination, TSource> profile = new MapProfile<TDestination, TSource>();
         foreach (var resolver in _sourceResolvers.Values)
         {
-            profile.AddResolver(new MemberResolver
+            profile.AddResolver(new MapBinding
             {
                 SourceProperty = resolver.DestinationProperty,
                 DestinationProperty = resolver.SourceProperty
@@ -120,30 +120,30 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         return property;
     }
 
-    private void AddResolver(MemberResolver resolver)
+    private void AddResolver(MapBinding binding)
     {
-        ArgumentNullException.ThrowIfNull(resolver);
+        ArgumentNullException.ThrowIfNull(binding);
         
-        ResolverKey sourceBinderKey = new ResolverKey
+        BindingKey sourceBinderKey = new BindingKey
         { 
-            MemberName = resolver.SourceProperty.Name,
-            MemberType = resolver.SourceProperty.PropertyType
+            MemberName = binding.SourceProperty.Name,
+            MemberType = binding.SourceProperty.PropertyType
         };
 
-        ResolverKey destinationBinderKey = new ResolverKey
+        BindingKey destinationBinderKey = new BindingKey
         {
-            MemberName = resolver.DestinationProperty.Name,
-            MemberType = resolver.DestinationProperty.PropertyType
+            MemberName = binding.DestinationProperty.Name,
+            MemberType = binding.DestinationProperty.PropertyType
         };
 
-        if (!_sourceResolvers.TryAdd(sourceBinderKey, resolver))
+        if (!_sourceResolvers.TryAdd(sourceBinderKey, binding))
         {
             throw new MappingConfigurationException(
                 $"A mapping for member '{sourceBinderKey.MemberName}' already exists."
             );
         }
 
-        if (!_destinationResolvers.TryAdd(destinationBinderKey, resolver))
+        if (!_destinationResolvers.TryAdd(destinationBinderKey, binding))
         {
             throw new MappingConfigurationException(
                 $"A mapping for member '{destinationBinderKey.MemberName}' already exists."

@@ -1,8 +1,8 @@
 using System.Reflection;
 
-namespace LazyMapper.Lib.Profile.Resolvers;
+namespace LazyMapper.Lib.Profile.Binding;
 
-public class MemberResolver
+public class MapBinding
 {
 
     public  required PropertyInfo DestinationProperty { get; init; }
