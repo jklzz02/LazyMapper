@@ -4,11 +4,15 @@ using LazyMapper.Lib.Profile.Resolvers;
 
 namespace LazyMapper.Lib.Profile;
 
-public interface IMapProfile
+internal interface IMapProfile
 {
-    internal ProfileKey Key { get; }
+    ProfileKey Key { get; }
     
-    public bool IsIgnored(PropertyInfo sourceProperty);
+    bool IsIgnored(PropertyInfo sourceProperty);
     
-    public MemberResolver? Resolver(ResolverKey key);
+    MemberResolver? Resolver(ResolverKey key);
+    
+    void InvokeBeforeMap(object source);
+    
+    void InvokeAfterMap(object source, object destination);
 }

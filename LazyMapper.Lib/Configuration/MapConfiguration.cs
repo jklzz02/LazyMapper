@@ -2,7 +2,7 @@ using LazyMapper.Lib.Profile;
 
 namespace LazyMapper.Lib.Configuration;
 
-public class MapConfiguration<TSource, TDestination> : IMapConfiguration
+public class MapConfiguration<TSource, TDestination>
     where TSource : class, new()
     where TDestination : class, new()
 {    
@@ -13,6 +13,17 @@ public class MapConfiguration<TSource, TDestination> : IMapConfiguration
     {
         _mapper = mapper;
         _profile = profile;
+    }
+
+    public MapConfiguration<TSource, TDestination> AfterMap(Action<TSource, TDestination> action)
+    {
+        _profile.RegisterAfterMapHook(action);
+        return this;
+    }
+
+    public MapConfiguration<TSource, TDestination> BeforeMap(Action<TSource> action)
+    {
+        return this;
     }
 
     public void ReverseMap()

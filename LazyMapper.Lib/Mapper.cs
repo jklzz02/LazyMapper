@@ -24,15 +24,19 @@ public class Mapper
         Type destinationType = typeof(TDestination);
         
         IMapProfile? profile = GetProfile<TSource, TDestination>();
-
+        
         if (profile == null)
         {
             throw new InvalidOperationException(
                 $"Cannot map '{sourceType.FullName}' to type '{destinationType.FullName}'"
             );
         }
-
-        return (TDestination)Map(source, sourceType, destinationType, profile);
+        
+        profile.InvokeBeforeMap(source);
+        TDestination result = (TDestination)Map(source, sourceType, destinationType, profile);
+        profile.InvokeAfterMap(source, result);
+        
+        return result;
     }
 
     public IEnumerable<TDestination> Map<TSource, TDestination>(IEnumerable<TSource> source)
@@ -170,12 +174,12 @@ public class Mapper
         return CollectionHandler.ReconstructCollection(mappedItems, destElementType, destCollectionType);
     }
     
-    public IMapConfiguration CreateMap<TSource, TDestination>()
+    public MapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>()
         where TSource : class, new()
         where TDestination : class, new()
         => CreateMap<TSource, TDestination>(null);
 
-    public IMapConfiguration CreateMap<TSource, TDestination>(
+    public MapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>(
         Action<MapProfile<TSource, TDestination>>? mapConfigurations)
         where TSource : class, new()
         where TDestination : class, new()
@@ -200,7 +204,7 @@ public class Mapper
         return new MapConfiguration<TSource, TDestination>(this, profile);
     }
 
-    public void Register<TProfile>() where TProfile : IMapProfile, new()
+    public void Register<TProfile>() where TProfile : new()
     {
         Type type = typeof(TProfile);
         
@@ -209,7 +213,7 @@ public class Mapper
             throw new InvalidOperationException($"Cannot register type '{type.FullName}' as a profile");
         }
 
-        TProfile profile = new TProfile();
+        IMapProfile profile = (IMapProfile)new TProfile();
         
         if (!_profiles.TryAdd(profile.Key, profile))
         {
@@ -217,9 +221,14 @@ public class Mapper
         }
     }
 
-    public void Register(IMapProfile profile)
+    public void Register<TSource, TDestination>(MapProfile<TSource, TDestination> profile)
+        where TSource : class, new()
+        where TDestination : class, new()
     {
-        if (!_profiles.TryAdd(profile.Key, profile))
+        ArgumentNullException.ThrowIfNull(profile);
+        var core = (IMapProfile)profile;
+
+        if (!_profiles.TryAdd(core.Key, core))
         {
             throw new DuplicateProfilesException(profile.GetType());
         }
@@ -314,6 +323,7 @@ public class Mapper
             })
             .ToArray();
     
-    private bool IsMapProfile(Type type)
-        => type.IsAssignableTo(typeof(IMapProfile));
+    private static bool IsMapProfile(Type type)
+        => type.BaseType is { IsGenericType: true } baseType 
+           && baseType.GetGenericTypeDefinition() == typeof(MapProfile<,>);
 }

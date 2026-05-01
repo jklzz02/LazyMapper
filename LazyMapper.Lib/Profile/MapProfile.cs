@@ -17,21 +17,24 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     private static readonly Type SourceType = typeof(TSource);
     private static readonly Type DestinationType = typeof(TDestination);
     
+    private Action<TSource>? _beforeMap;
+    private Action<TSource, TDestination>? _afterMap;
+    
     internal MapProfile()
     {
     }
 
-    public ProfileKey Key
+    ProfileKey IMapProfile.Key
         => new ProfileKey
         {
             SourceType = SourceType,
             DestinationType = DestinationType
         };
 
-    public bool IsIgnored(PropertyInfo propertyInfo)
+    bool IMapProfile.IsIgnored(PropertyInfo propertyInfo)
         => _ignored.Contains(propertyInfo);
 
-    public MemberResolver? Resolver(ResolverKey binderKey)
+    MemberResolver? IMapProfile.Resolver(ResolverKey binderKey)
         => _sourceResolvers.GetValueOrDefault(binderKey) ?? _destinationResolvers.GetValueOrDefault(binderKey);
 
     public MapProfile<TSource, TDestination> Bind(
@@ -51,21 +54,6 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         return this;
     }
     
-    public MapProfile<TDestination, TSource> Reverse()
-    {
-        MapProfile<TDestination, TSource> profile = new MapProfile<TDestination, TSource>();
-        foreach (var resolver in _sourceResolvers.Values)
-        {
-            profile.AddResolver(new MemberResolver
-            {
-                SourceProperty = resolver.DestinationProperty,
-                DestinationProperty = resolver.SourceProperty
-            });
-        }
-        
-        return profile; 
-    }
-
     public MapProfile<TSource, TDestination> Ignore(Expression<Func<TSource, object?>> memberSelector)
     {
         ArgumentNullException.ThrowIfNull(memberSelector);
@@ -79,6 +67,41 @@ public class MapProfile<TSource, TDestination> : IMapProfile
             MemberType = property.PropertyType
         });
 
+        return this;
+    }
+    
+    internal MapProfile<TDestination, TSource> Reverse()
+    {
+        MapProfile<TDestination, TSource> profile = new MapProfile<TDestination, TSource>();
+        foreach (var resolver in _sourceResolvers.Values)
+        {
+            profile.AddResolver(new MemberResolver
+            {
+                SourceProperty = resolver.DestinationProperty,
+                DestinationProperty = resolver.SourceProperty
+            });
+        }
+        
+        return profile;
+    }
+    
+    void IMapProfile.InvokeBeforeMap(object source)
+        => _beforeMap?.Invoke((TSource)source);
+
+    void IMapProfile.InvokeAfterMap(object source, object destination)
+        => _afterMap?.Invoke((TSource)source, (TDestination)destination);
+
+    internal MapProfile<TSource, TDestination> RegisterBeforeMapHook(Action<TSource> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        _beforeMap = action;
+        return this;
+    }
+
+    internal MapProfile<TSource, TDestination> RegisterAfterMapHook(Action<TSource, TDestination> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        _afterMap = action;
         return this;
     }
     
