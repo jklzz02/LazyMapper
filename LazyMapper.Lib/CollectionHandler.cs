@@ -70,6 +70,24 @@ internal static class CollectionHandler
             }
             return hashSet;
         }
+        
+        if (collectionType.IsGenericType &&
+            collectionType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+        {
+            var genericArgs = collectionType.GetGenericArguments();
+            var dictType = typeof(Dictionary<,>).MakeGenericType(genericArgs[0], genericArgs[1]);
+            var dict = (IDictionary)Activator.CreateInstance(dictType)!;
+
+            var keyProp = elementType.GetProperty("Key")!;
+            var valueProp = elementType.GetProperty("Value")!;
+
+            foreach (var item in mappedElements)
+            {
+                dict.Add(keyProp.GetValue(item)!, valueProp.GetValue(item));
+            }
+
+            return dict;
+        }
 
         if (collectionType.IsInterface)
         {

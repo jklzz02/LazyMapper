@@ -5,7 +5,7 @@ using LazyMapper.TestFixtures.Dto;
 
 namespace LazyMapper.Test;
 
-public class FlatClassesMappingTests
+public class FlatClassesMappingTest
 {
     [Theory]
     [MemberData(nameof(FlatClassesTestDataGenerator.ForwardMapping), MemberType = typeof(FlatClassesTestDataGenerator))]

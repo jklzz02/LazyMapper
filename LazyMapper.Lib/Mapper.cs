@@ -63,7 +63,20 @@ public class Mapper
 
         foreach (MapBinding resolver in bindings)
         {
-            resolver.DestinationProperty.SetValue(destination, resolver.SourceProperty.GetValue(source));
+            var value = resolver.SourceProperty.GetValue(source);
+
+            if (value is not null && resolver.SourceProperty.PropertyType.IsCollection())
+            {
+                var result = MapCollection(
+                    value,
+                    resolver.SourceProperty.PropertyType,
+                    resolver.DestinationProperty.PropertyType);
+
+                resolver.DestinationProperty.SetValue(destination, result);
+                continue;
+            }
+
+            resolver.DestinationProperty.SetValue(destination, value);
         }
         
         PropertyInfo[] unmappedProperties = destType.GetProperties()
@@ -153,28 +166,35 @@ public class Mapper
 
         var items = CollectionHandler.ExtractCollectionItems(sourceValue, sourceCollectionType);
 
-        List<object> mappedItems;
-
         if (sourceElementType.IsCollection())
         {
-            mappedItems = items
+            var mappedItems = items
                 .Select(item => MapCollection(item.Value, sourceElementType, destElementType))
                 .Where(x => x != null)
                 .Select(x => x!)
                 .ToList();
-        }
-        else
-        {
-            IMapProfile? elementProfile = GetProfile(sourceElementType, destElementType);
-            if (elementProfile is null)
-                return null;
 
-            mappedItems = items
+            return CollectionHandler.ReconstructCollection(mappedItems, destElementType, destCollectionType);
+        }
+
+        IMapProfile? elementProfile = GetProfile(sourceElementType, destElementType);
+        if (elementProfile is not null)
+        {
+            var mappedItems = items
                 .Select(item => Map(item.Value, sourceElementType, destElementType, elementProfile))
                 .ToList();
+
+            return CollectionHandler.ReconstructCollection(mappedItems, destElementType, destCollectionType);
         }
 
-        return CollectionHandler.ReconstructCollection(mappedItems, destElementType, destCollectionType);
+        if (sourceElementType.IsPrimitive || sourceElementType == typeof(string) || sourceElementType == destElementType)
+        {
+            var mappedItems = items.Select(item => item.Value).ToList();
+
+            return CollectionHandler.ReconstructCollection(mappedItems, destElementType, destCollectionType);
+        }
+
+        return null;
     }
     
     public MapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>()
