@@ -19,12 +19,12 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     
     private Action<TSource>? _beforeMap;
     private Action<TSource, TDestination>? _afterMap;
-    
-    internal MapProfile()
+
+    protected internal MapProfile()
     {
     }
 
-    ProfileKey IMapProfile.Key
+    public ProfileKey Key
         => new ProfileKey
         {
             SourceType = SourceType,
@@ -37,6 +37,23 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     MapBinding? IMapProfile.Binding(BindingKey binderKey)
         => _sourceBindings.GetValueOrDefault(binderKey) ?? _destinationBindings.GetValueOrDefault(binderKey);
 
+    public MapProfile<TSource, TDestination> Bind<TMember>(
+        Expression<Func<TSource, TMember>> sourceMemberSelector,
+        Expression<Func<TDestination, TMember>> destinationMemberSelector)
+    {
+        ArgumentNullException.ThrowIfNull(sourceMemberSelector);
+        ArgumentNullException.ThrowIfNull(destinationMemberSelector);
+        
+        MapBinding binding = new MapBinding
+        {
+            SourceProperty = ExtractProperty(sourceMemberSelector.Body),
+            DestinationProperty = ExtractProperty(destinationMemberSelector.Body)
+        };
+        
+        AddBinding(binding);
+        return this;
+    }
+    
     public MapProfile<TSource, TDestination> Bind(
         Expression<Func<TSource, object?>> sourceMemberSelector,
         Expression<Func<TDestination, object?>> destinationMemberSelector)
@@ -70,7 +87,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         return this;
     }
     
-    internal MapProfile<TDestination, TSource> Reverse()
+    public MapProfile<TDestination, TSource> Reverse()
     {
         MapProfile<TDestination, TSource> profile = new MapProfile<TDestination, TSource>();
         foreach (var resolver in _sourceBindings.Values)

@@ -108,6 +108,25 @@ public class FlatClassesMappingTests
             Assert.Equal(r.Expected.IsActive, r.Actual.IsActive);
         });
     }
+
+    [Fact]
+    public void Null_Value_Should_Not_Be_Mapped()
+    {
+        Customer source = null!;
+        Mapper mapper = new();
+        mapper.CreateMap<Customer, CustomerDto>();
+        
+        Assert.Throws<ArgumentNullException>(() => mapper.Map<Customer, CustomerDto>(source));
+    }
+
+    [Fact]
+    public void Map_With_Null_Profile_Should_Throw()
+    {
+        Customer source = new();
+        Mapper mapper = new();
+        
+        Assert.Throws<InvalidOperationException>(() => mapper.Map<Customer, CustomerDto>(source));
+    }
     
     [Fact]
     public void Ignored_Property_Should_Not_Be_Mapped()

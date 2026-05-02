@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\LazyMapper.Lib\LazyMapper.Lib.csproj" />
+    </ItemGroup>
+
 </Project>

@@ -54,18 +54,18 @@ public class FlatClassesTestDataGenerator
             new Customer
             {
                 Id = 3,
-                FirstName = null,
-                LastName = null,
-                EmailAddress = null,
+                FirstName = null!,
+                LastName = null!,
+                EmailAddress = null!,
                 DateOfBirth = DateTime.MinValue,
                 IsActive = false
             },
             new CustomerDto
             {
                 Id = 3,
-                GivenName = null,
-                Surname = null,
-                Email = null,
+                GivenName = null!,
+                Surname = null!,
+                Email = null!,
                 DateOfBirth = DateTime.MinValue,
                 IsActive = false
             }
@@ -119,18 +119,18 @@ public class FlatClassesTestDataGenerator
             new CustomerDto
             {
                 Id = 2,
-                GivenName = null,
-                Surname = null,
-                Email = null,
+                GivenName = null!,
+                Surname = null!,
+                Email = null!,
                 DateOfBirth = DateTime.MinValue,
                 IsActive = false
             },
             new Customer
             {
                 Id = 2,
-                FirstName = null,
-                LastName = null,
-                EmailAddress = null,
+                FirstName = null!,
+                LastName = null!,
+                EmailAddress = null!,
                 DateOfBirth = DateTime.MinValue,
                 IsActive = false
             }
@@ -181,9 +181,9 @@ public class FlatClassesTestDataGenerator
                 new Customer
                 {
                     Id = 2,
-                    FirstName = null,
-                    LastName = null,
-                    EmailAddress = null,
+                    FirstName = null!,
+                    LastName = null!,
+                    EmailAddress = null!,
                     DateOfBirth = DateTime.MinValue,
                     IsActive = false
                 },
@@ -210,9 +210,9 @@ public class FlatClassesTestDataGenerator
                 new CustomerDto
                 {
                     Id = 2,
-                    GivenName = null,
-                    Surname = null,
-                    Email = null,
+                    GivenName = null!,
+                    Surname = null!,
+                    Email = null!,
                     DateOfBirth = DateTime.MinValue,
                     IsActive = false
                 },
@@ -244,9 +244,9 @@ public class FlatClassesTestDataGenerator
         new Customer
         {
             Id = 2,
-            FirstName = null,
-            LastName = null,
-            EmailAddress = null,
+            FirstName = null!,
+            LastName = null!,
+            EmailAddress = null!,
             DateOfBirth = DateTime.MinValue,
             IsActive = false
         },
