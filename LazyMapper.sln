@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyMapper.Test", "LazyMapp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyMapper.TestFixtures", "LazyMapper.TestFixtures\LazyMapper.TestFixtures.csproj", "{57F6C642-04EB-4CE9-91AC-8D8D87B167DA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyMapper.Benchmark", "LazyMapper.Benchmark\LazyMapper.Benchmark.csproj", "{53DDE0A9-E36F-4DD5-8A13-C1FED93F1DC5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{57F6C642-04EB-4CE9-91AC-8D8D87B167DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57F6C642-04EB-4CE9-91AC-8D8D87B167DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57F6C642-04EB-4CE9-91AC-8D8D87B167DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53DDE0A9-E36F-4DD5-8A13-C1FED93F1DC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53DDE0A9-E36F-4DD5-8A13-C1FED93F1DC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53DDE0A9-E36F-4DD5-8A13-C1FED93F1DC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53DDE0A9-E36F-4DD5-8A13-C1FED93F1DC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
