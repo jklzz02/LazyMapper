@@ -1,4 +1,4 @@
-namespace LazyMapper.Lib.Profile.Keys;
+namespace LazyMapper.Lib.Profile;
 
 public record ProfileKey
 {

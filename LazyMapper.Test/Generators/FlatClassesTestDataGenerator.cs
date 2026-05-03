@@ -1,4 +1,3 @@
-
 using LazyMapper.TestFixtures.Classes;
 using LazyMapper.TestFixtures.Dto;
 
