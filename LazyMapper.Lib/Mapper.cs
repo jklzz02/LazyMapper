@@ -1,4 +1,5 @@
 using System.Reflection;
+using LazyMapper.Lib.Collections;
 using LazyMapper.Lib.Configuration;
 using LazyMapper.Lib.Exceptions;
 using LazyMapper.Lib.Extensions;
@@ -170,11 +171,10 @@ public class Mapper
         {
             var mappedItems = items
                 .Select(item => MapCollection(item.Value, sourceElementType, destElementType))
-                .Where(x => x != null)
-                .Select(x => x!)
+                .Where(item => item != null)
                 .ToList();
 
-            return CollectionHandler.ReconstructCollection(mappedItems, destElementType, destCollectionType);
+            return CollectionHandler.ReconstructCollection(mappedItems!, destElementType, destCollectionType);
         }
 
         IMapProfile? elementProfile = GetProfile(sourceElementType, destElementType);

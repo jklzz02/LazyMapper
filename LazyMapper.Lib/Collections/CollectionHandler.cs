@@ -1,11 +1,11 @@
 using System.Collections;
 using LazyMapper.Lib.Extensions;
 
-namespace LazyMapper.Lib;
+namespace LazyMapper.Lib.Collections;
 
 internal static class CollectionHandler
 {
-    internal static IList<CollectionItem> ExtractCollectionItems(object collection, Type collectionType)
+    internal static IList<CollectionElement> ExtractCollectionItems(object collection, Type collectionType)
     {
         if (!collectionType.IsCollection())
         {
@@ -22,11 +22,10 @@ internal static class CollectionHandler
     
         return iterable
             .Cast<object>()
-            .Select(item => new CollectionItem
+            .Select(item => new CollectionElement
             {
                 Value = item,
                 ItemType = item?.GetType() ?? elementType,
-                IsCollection = item != null && item.GetType().IsCollection(),
             })
             .ToList();
     }
@@ -118,11 +117,4 @@ internal static class CollectionHandler
         }
         return defaultList;
     }
-}
-
-internal record CollectionItem
-{
-    public required object Value { get; init; }
-    public required Type ItemType { get; init; }
-    public required bool IsCollection { get; init; }
 }
