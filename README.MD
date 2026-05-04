@@ -15,7 +15,6 @@ To create and use a map, all that is needed is the [Mapper](LazyMapper.Lib/Mappe
 ```csharp
 var mapper = new Mapper();
 mapper.CreateMap();
-
 var foo = new Foo();
 var bar = mapper.Map(foo);
 ```
@@ -29,7 +28,6 @@ To bind two properties that share the same type but have different names, use th
 ```csharp
 public record Foo(string FooName);
 public record Bar(string BarName);
-
 var mapper = new Mapper();
 mapper.CreateMap<Foo, Bar>(profile =>
 {
@@ -44,23 +42,20 @@ public record Foo(string FooName);
 public record Bar(string BarName);
 public record FooHolder(Foo Foo);
 public record BarHolder(Bar Bar);
-
 var mapper = new Mapper();
-
 mapper.CreateMap<Foo, Bar>(profile =>
 {
     profile.Bind(f => f.FooName, b => b.BarName);
 });
-
-mapper.CreateMap<Foo, Bar>(profile =>
+mapper.CreateMap<FooHolder, BarHolder>(profile =>
 {
     profile.Bind(fh => fh.Foo, bh => bh.Bar);
 });
 ```
 
-Nested colelction and circular referencing classes are both supported and [tested](LazyMapper.Test/NestedMappingTest.cs)
+Nested collection and circular referencing classes are both supported and [tested](LazyMapper.Test/NestedMappingTest.cs)
 
-## Ignore properties
+## Ignore Properties
 
 To exclude a property from being mapped, use the `Ignore()` method during map configuration.
 
@@ -89,7 +84,7 @@ mapper.CreateMap<Foo, Bar>(profile =>
 ```
 
 - `BeforeMap` receives the **source** object and runs before any property is mapped.
-- `AfterMap` receives both the **source** and the fully mapped **destination** object, making it useful for any post processing that depends on both.
+- `AfterMap` receives both the **source** and the fully mapped **destination** object, making it useful for any post-processing that depends on both.
 
 ## Class Profiles
 
@@ -102,14 +97,13 @@ public class FooProfile : MapProfile<Foo, Bar>
     {
         Bind(f => f.FooName, b => b.BarName);
         Ignore(f => f.Id);
-        BeforMap(f => f.FooName = f.FooName.Trim());
+        BeforeMap(f => f.FooName = f.FooName.Trim());
         AfterMap((f, b) =>
         {
             b.Id = f.Id + 1;
         })
     }
 }
-
 ```
 
 ## Register Profiles
@@ -121,13 +115,17 @@ var mapper = new Mapper();
 mapper.Register<FooProfile>();
 ```
 
-Alternatively is possible to load all profiles from a given `Assembly`. For a class to be a considered a Valid **Profile** all it takes is to be inheritors of [MapProfile<TSource, TDestination>](LazyMapper.Lib/Profile/MapProfile.cs).
+Alternatively it is possible to load all profiles from a given `Assembly`. For a class to be considered a valid **Profile** all it takes is to be an inheritor of [MapProfile<TSource, TDestination>](LazyMapper.Lib/Profile/MapProfile.cs).
 
 ```csharp
 var mapper = new Mapper();
 Assembly profilesAssembly = Assembly.GetAssembly(typeof(FooProfile));
 mapper.RegisterProfilesFromAssembly(profilesAssembly);
-
 ```
 
 This method will scan the given assembly and register all found profiles.
+
+## Limitations
+
+- **Projections are not supported.** Mapping to `IQueryable<T>` (e.g. for use with Entity Framework) is not implemented (yet).
+- **Binding properties with both a different name and a different type is not supported** outside of `AfterMap` callbacks. If two properties differ in both name and type, use `AfterMap` to handle the assignment manually.
