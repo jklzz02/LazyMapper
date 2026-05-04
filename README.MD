@@ -31,7 +31,7 @@ public record Foo(string FooName);
 public record Bar(string BarName);
 
 var mapper = new Mapper();
-mapper.CreateMap(profile =>
+mapper.CreateMap<Foo, Bar>(profile =>
 {
     profile.Bind(f => f.FooName, b => b.BarName);
 });
@@ -47,12 +47,12 @@ public record BarHolder(Bar Bar);
 
 var mapper = new Mapper();
 
-mapper.CreateMap(profile =>
+mapper.CreateMap<Foo, Bar>(profile =>
 {
     profile.Bind(f => f.FooName, b => b.BarName);
 });
 
-mapper.CreateMap(profile =>
+mapper.CreateMap<Foo, Bar>(profile =>
 {
     profile.Bind(fh => fh.Foo, bh => bh.Bar);
 });
