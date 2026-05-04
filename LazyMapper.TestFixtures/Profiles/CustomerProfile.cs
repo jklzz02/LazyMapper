@@ -1,5 +1,5 @@
 using LazyMapper.Lib.Profile;
-using LazyMapper.TestFixtures.Classes;
+using LazyMapper.TestFixtures.Models;
 using LazyMapper.TestFixtures.Dto;
 
 namespace LazyMapper.TestFixtures.Profiles;

@@ -1,4 +1,4 @@
-namespace LazyMapper.TestFixtures.Classes;
+namespace LazyMapper.TestFixtures.Models;
 
 public class OrderItem
 {

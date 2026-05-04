@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using LazyMapper.Lib;
 using LazyMapper.Test.Generators;
-using LazyMapper.TestFixtures.Classes;
+using LazyMapper.TestFixtures.Models;
 using LazyMapper.TestFixtures.Dto;
 
 namespace LazyMapper.Test;
