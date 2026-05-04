@@ -5,8 +5,12 @@
 ![xUnit](https://img.shields.io/badge/xUnit-tested-5E1F87)
 ![BenchmarkDotNet](https://img.shields.io/badge/BenchmarkDotNet-benchmarked-orange)
 
+## Why LazyMapper?
+
+LazyMapper is a straightforward convention based, no configuration library.
+
 Since AutoMapper's licensing change, I noticed that I didn't have a unified way to handle mapping in my .NET projects.
-This library was written to satisfy the needs of my personal projects. Note that this is a hobby project meant for hobby projects — it doesn't pretend to be a real substitute for any established library or a viable option for any serious project.
+This library was written to satisfy the needs of my personal projects. Note that this is a hobby project it doesn't pretend to be a real substitute for any established library or a viable option for any serious project.
 
 ## Creating a Map
 
@@ -127,5 +131,5 @@ This method will scan the given assembly and register all found profiles.
 
 ## Limitations
 
-- **Projections are not supported.** Mapping to `IQueryable<T>` (e.g. for use with Entity Framework) is not implemented (yet).
+- **Projections are not supported.** Mapping to `IQueryable<T>` (e.g. for use with Entity Framework) is not yet implemented.
 - **Binding properties with both a different name and a different type is not supported** outside of `AfterMap` callbacks. If two properties differ in both name and type, use `AfterMap` to handle the assignment manually.
