@@ -18,9 +18,9 @@ To create and use a map, all that is needed is the [Mapper](LazyMapper.Lib/Mappe
 
 ```csharp
 var mapper = new Mapper();
-mapper.CreateMap();
+mapper.CreateMap<Foo, Bar>();
 var foo = new Foo();
-var bar = mapper.Map(foo);
+var bar = mapper.Map<Foo, Bar>(foo);
 ```
 
 By convention, any property sharing the same name and type will be mapped automatically.
