@@ -8,11 +8,27 @@ using LazyMapper.Lib.Profile;
 
 namespace LazyMapper.Lib;
 
+/// <summary>
+/// Provides functionality for mapping objects between source and destination types.
+/// Allows configuration of mappings and registration of map profiles.
+/// </summary>
 public class Mapper
 {
     private readonly Dictionary<ProfileKey, IMapProfile> _profiles = new();
     private readonly Dictionary<object, object> _mapped = new(ReferenceEqualityComparer.Instance);
 
+
+    /// <summary>
+    /// Maps an object of type <typeparamref name="TSource"/> to an object of type <typeparamref name="TDestination"/>.
+    /// </summary>
+    /// <typeparam name="TSource">The source type. Must be a class with a parameterless constructor.</typeparam>
+    /// <typeparam name="TDestination">The destination type. Must be a class with a parameterless constructor.</typeparam>
+    /// <param name="source">The source object to be mapped. Cannot be null.</param>
+    /// <returns>A new instance of type <typeparamref name="TDestination"/> mapped from the source object.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the source object is null.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when a mapping profile cannot be found to map from type <typeparamref name="TSource"/> to type <typeparamref name="TDestination"/>.
+    /// </exception>
     public TDestination Map<TSource, TDestination>(TSource source)
         where TSource : class, new()
         where TDestination : class, new()
@@ -39,6 +55,14 @@ public class Mapper
         return result;
     }
 
+    /// <summary>
+    /// Maps a collection of objects of type <typeparamref name="TSource"/> to a collection of objects of type <typeparamref name="TDestination"/>.
+    /// </summary>
+    /// <typeparam name="TSource">The source type. Must be a class with a parameterless constructor.</typeparam>
+    /// <typeparam name="TDestination">The destination type. Must be a class with a parameterless constructor.</typeparam>
+    /// <param name="source">The source collection to be mapped. Cannot be null.</param>
+    /// <returns>An <see cref="IEnumerable{TDestination}"/> containing mapped objects from the source collection.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the source collection is null.</exception>
     public IEnumerable<TDestination> Map<TSource, TDestination>(IEnumerable<TSource> source)
         where TSource : class, new()
         where TDestination : class, new()
@@ -152,6 +176,138 @@ public class Mapper
     
         return destination;
     }
+
+    /// <summary>
+    /// Creates a new map configuration for transforming objects of type <typeparamref name="TSource"/> into objects of type <typeparamref name="TDestination"/>.
+    /// </summary>
+    /// <typeparam name="TSource">The source type for the mapping configuration. Must be a class with a parameterless constructor.</typeparam>
+    /// <typeparam name="TDestination">The destination type for the mapping configuration. Must be a class with a parameterless constructor.</typeparam>
+    /// <returns>An instance of <see cref="MapConfiguration{TSource, TDestination}"/> to define additional mapping details.</returns>
+    /// <exception cref="DuplicateProfilesException">T
+    /// Thrown when an attempt is made to create a mapping configuration that already exists for the specified types.
+    /// </exception>
+    public MapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>()
+        where TSource : class, new()
+        where TDestination : class, new()
+        => CreateMap<TSource, TDestination>(null);
+
+
+    /// <summary>
+    /// Creates a mapping configuration between a source type and a destination type.
+    /// </summary>
+    /// <typeparam name="TSource">The source type. Must be a class with a parameterless constructor.</typeparam>
+    /// <typeparam name="TDestination">The destination type. Must be a class with a parameterless constructor.</typeparam>
+    /// <param name="mapConfigurations">
+    /// An optional action to configure mapping rules using a <see cref="MapProfile{TSource, TDestination}"/> instance.
+    /// If null, default mapping rules are applied without additional configuration.
+    /// </param>
+    /// <returns>
+    /// A <see cref="MapConfiguration{TSource, TDestination}"/> that allows further customization
+    /// of the mapping behavior for the specified types.
+    /// </returns>
+    /// <exception cref="DuplicateProfilesException">
+    /// Thrown when an attempt is made to create a mapping configuration that already exists for the specified types.
+    /// </exception>
+    public MapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>(
+        Action<MapProfile<TSource, TDestination>>? mapConfigurations)
+        where TSource : class, new()
+        where TDestination : class, new()
+    {
+        MapProfile<TSource, TDestination> profile = new MapProfile<TSource, TDestination>();
+        mapConfigurations?.Invoke(profile);
+        
+        Type sourceType = typeof(TSource);
+        Type destinationType = typeof(TDestination);
+
+        ProfileKey profileKey = new ProfileKey
+        {
+            SourceType = sourceType,
+            DestinationType = destinationType
+        };
+
+        if (!_profiles.TryAdd(profileKey, profile))
+        {
+            throw new DuplicateProfilesException(sourceType, destinationType);
+        }
+        
+        return new MapConfiguration<TSource, TDestination>(this, profile);
+    }
+
+    /// <summary>
+    /// Registers a map profile type as a map configuration source.
+    /// </summary>
+    /// <typeparam name="TProfile">The profile type. It must be an inheritor of <see cref="MapProfile{TSource,TDestination}"/></typeparam>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when <typeparamref name="TProfile"/> is not a valid map profile type.
+    /// </exception>
+    /// <exception cref="DuplicateProfilesException">
+    /// Thrown when an attempt is made to create a mapping configuration that already exists for the specified types.
+    /// </exception>
+    public void Register<TProfile>() where TProfile : new()
+    {
+        Type type = typeof(TProfile);
+        
+        if (!IsMapProfile(type))
+        {
+            throw new InvalidOperationException($"Cannot register type '{type.FullName}' as a profile");
+        }
+
+        IMapProfile profile = (IMapProfile)new TProfile();
+        
+        if (!_profiles.TryAdd(profile.Key, profile))
+        {
+            throw new DuplicateProfilesException(type);
+        }
+    }
+
+    /// <summary>
+    /// Registers a map profile instance as a map configuration source.
+    /// </summary>
+    /// <param name="profile">The profile to register.</param>
+    /// <typeparam name="TSource">The source type of the profile to register.</typeparam>
+    /// <typeparam name="TDestination">The destination type of the profile to register.</typeparam>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="profile"/> is null.
+    /// </exception>
+    /// <exception cref="DuplicateProfilesException">
+    /// Thrown when an attempt is made to create a mapping configuration that already exists for the specified types.
+    /// </exception>
+    public void Register<TSource, TDestination>(MapProfile<TSource, TDestination> profile)
+        where TSource : class, new()
+        where TDestination : class, new()
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        var core = (IMapProfile)profile;
+
+        if (!_profiles.TryAdd(core.Key, core))
+        {
+            throw new DuplicateProfilesException(profile.GetType());
+        }
+    }
+    
+    /// <summary>
+    /// Registers all map profiles from the specified assembly as map configuration sources.
+    /// </summary>
+    /// <param name="assembly">The <see cref="Assembly"/> of the profiles to register.</param>
+    /// <exception cref="DuplicateProfilesException">
+    /// Thrown when an attempt is made to create a mapping configuration that already exists for the specified types.
+    /// </exception>
+    public void RegisterProfilesFromAssembly(Assembly assembly)
+    {
+        List<Type> mapProfiles = assembly
+            .GetTypes()
+            .Where(IsMapProfile)
+            .ToList();
+
+        foreach (var profile in mapProfiles)
+        {
+            bool registered = _profiles.TryAdd(GetProfileKey(profile), InstantiateProfile(profile));
+            if (!registered)
+            {
+                throw new DuplicateProfilesException(profile);
+            }
+        }
+    }
     
     private object? MapCollection(
         object sourceValue,
@@ -194,83 +350,6 @@ public class Mapper
         }
 
         return null;
-    }
-    
-    public MapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>()
-        where TSource : class, new()
-        where TDestination : class, new()
-        => CreateMap<TSource, TDestination>(null);
-
-    public MapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>(
-        Action<MapProfile<TSource, TDestination>>? mapConfigurations)
-        where TSource : class, new()
-        where TDestination : class, new()
-    {
-        MapProfile<TSource, TDestination> profile = new MapProfile<TSource, TDestination>();
-        mapConfigurations?.Invoke(profile);
-        
-        Type sourceType = typeof(TSource);
-        Type destinationType = typeof(TDestination);
-
-        ProfileKey profileKey = new ProfileKey
-        {
-            SourceType = sourceType,
-            DestinationType = destinationType
-        };
-
-        if (!_profiles.TryAdd(profileKey, profile))
-        {
-            throw new DuplicateProfilesException(sourceType, destinationType);
-        }
-        
-        return new MapConfiguration<TSource, TDestination>(this, profile);
-    }
-
-    public void Register<TProfile>() where TProfile : new()
-    {
-        Type type = typeof(TProfile);
-        
-        if (!IsMapProfile(type))
-        {
-            throw new InvalidOperationException($"Cannot register type '{type.FullName}' as a profile");
-        }
-
-        IMapProfile profile = (IMapProfile)new TProfile();
-        
-        if (!_profiles.TryAdd(profile.Key, profile))
-        {
-            throw new DuplicateProfilesException(type);
-        }
-    }
-
-    public void Register<TSource, TDestination>(MapProfile<TSource, TDestination> profile)
-        where TSource : class, new()
-        where TDestination : class, new()
-    {
-        ArgumentNullException.ThrowIfNull(profile);
-        var core = (IMapProfile)profile;
-
-        if (!_profiles.TryAdd(core.Key, core))
-        {
-            throw new DuplicateProfilesException(profile.GetType());
-        }
-    }
-    
-    public void RegisterProfilesFromAssembly(Assembly assembly)
-    {
-        List<Type> mapProfiles = assembly
-            .GetTypes()
-            .Where(IsMapProfile)
-            .ToList();
-
-        foreach (var profile in mapProfiles)
-        {
-            bool registered = _profiles.TryAdd(GetProfileKey(profile), InstantiateProfile(profile));
-            if (!registered)
-            {
-                throw new DuplicateProfilesException(profile);
-            }
-        }
     }
     
     private IMapProfile? GetProfile(ProfileKey key) 

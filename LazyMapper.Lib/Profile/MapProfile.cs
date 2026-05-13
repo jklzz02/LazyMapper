@@ -5,6 +5,11 @@ using LazyMapper.Lib.Exceptions;
 
 namespace LazyMapper.Lib.Profile;
 
+/// <summary>
+/// Represents a map profile for mapping objects of type <typeparamref name="TSource"/> to <typeparamref name="TDestination"/>.
+/// </summary>
+/// <typeparam name="TSource">The source type. Must be a class with a parameterless constructor.</typeparam>
+/// <typeparam name="TDestination">The destination type. Must be a class with a parameterless constructor.</typeparam>
 public class MapProfile<TSource, TDestination> : IMapProfile
     where TSource : class, new()
     where TDestination : class, new()
@@ -23,19 +28,34 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     {
     }
 
+    /// <summary>
+    /// Gets the key for this map profile.
+    /// </summary>
     public ProfileKey Key
         => new ProfileKey
         {
             SourceType = SourceType,
             DestinationType = DestinationType
         };
-
+    
     bool IMapProfile.IsIgnored(PropertyInfo propertyInfo)
         => _ignored.Contains(propertyInfo);
 
     MapBinding? IMapProfile.Binding(BindingKey binderKey)
         => _sourceBindings.GetValueOrDefault(binderKey) ?? _destinationBindings.GetValueOrDefault(binderKey);
 
+    /// <summary>
+    /// Binds two members of the source and destination types.
+    /// </summary>
+    /// <param name="sourceMemberSelector">The selector for the source member.</param>
+    /// <param name="destinationMemberSelector">The selector for the destination member.</param>
+    /// <typeparam name="TMember">The type of the member to bind</typeparam>
+    /// <returns>
+    /// The same instance of <see cref="MapProfile{TSource, TDestination}"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="sourceMemberSelector"/> or <paramref name="destinationMemberSelector"/> is null.
+    /// </exception>
     public MapProfile<TSource, TDestination> Bind<TMember>(
         Expression<Func<TSource, TMember>> sourceMemberSelector,
         Expression<Func<TDestination, TMember>> destinationMemberSelector)
@@ -53,6 +73,15 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         return this;
     }
     
+    /// <summary>
+    /// Binds two members of the source and destination types.
+    /// </summary>
+    /// <param name="sourceMemberSelector">The selector for the source member.</param>
+    /// <param name="destinationMemberSelector">The selector for the destination member.</param>
+    /// <returns>
+    /// The same instance of <see cref="MapProfile{TSource, TDestination}"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException"></exception>
     public MapProfile<TSource, TDestination> Bind(
         Expression<Func<TSource, object?>> sourceMemberSelector,
         Expression<Func<TDestination, object?>> destinationMemberSelector)
@@ -70,6 +99,13 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         return this;
     }
     
+    /// <summary>
+    /// Specify to ignore the selected member.
+    /// </summary>
+    /// <param name="memberSelector">The selector for the member to ignore</param>
+    /// <typeparam name="TMember">The type of the member to ignore.</typeparam>
+    /// <returns>The same instance of <see cref="MapProfile{TSource,TDestination}"/></returns>
+    /// <exception cref="ArgumentNullException"></exception>
     public MapProfile<TSource, TDestination> Ignore<TMember>(Expression<Func<TSource, TMember>> memberSelector)
     {
         ArgumentNullException.ThrowIfNull(memberSelector);
@@ -86,6 +122,12 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         return this;
     }
     
+    /// <summary>
+    /// Creates a new map profile that maps the destination members to the source members.
+    /// </summary>
+    /// <returns>
+    /// A new instance of <see cref="MapProfile{TDestination, TSource}"/> that maps the destination members to the source members.
+    /// </returns>
     public MapProfile<TDestination, TSource> Reverse()
     {
         MapProfile<TDestination, TSource> profile = new MapProfile<TDestination, TSource>();
