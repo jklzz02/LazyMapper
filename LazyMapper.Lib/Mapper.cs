@@ -144,7 +144,7 @@ public class Mapper
                 continue;
             }
             
-            if (binding.SourceProperty.PropertyType.IsCollection())
+            if (binding!.SourceProperty.PropertyType.IsCollection())
             {
                 var result = MapCollection(
                     sourceValue,
