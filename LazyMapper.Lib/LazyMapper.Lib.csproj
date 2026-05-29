@@ -5,6 +5,18 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>LazyMapper.Lib</RootNamespace>
+        <Title>LazyMapper</Title>
+        <Description>A lightweight mapping library for .NET</Description>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/jklzz02/LazyMapper</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/jklzz02/LazyMapper</RepositoryUrl>
+        <PackageTags>mapper;mapping;object;profiles;dotnet</PackageTags>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Authors>Jklzz02</Authors>
     </PropertyGroup>
 
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="" Link="README.md" />
+    </ItemGroup>
 </Project>

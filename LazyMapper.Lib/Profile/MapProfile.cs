@@ -25,6 +25,9 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     private Action<TSource>? _beforeMap;
     private Action<TSource, TDestination>? _afterMap;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapProfile{TSource, TDestination}"/> class.
+    /// </summary>
     protected internal MapProfile()
     {
     }
@@ -45,7 +48,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     MapBinding? IMapProfile.Binding(BindingKey binderKey)
         => _sourceBindings.GetValueOrDefault(binderKey) ?? _destinationBindings.GetValueOrDefault(binderKey);
 
-    public IResolverBinding? Resolver(BindingKey key)
+    IResolverBinding? IMapProfile.Resolver(BindingKey key)
         => _destinationResolverBindings.GetValueOrDefault(key);
 
     /// <summary>

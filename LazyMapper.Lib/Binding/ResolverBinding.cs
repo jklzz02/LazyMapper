@@ -2,7 +2,7 @@ using System.Reflection;
 
 namespace LazyMapper.Lib.Binding;
 
-public class ResolverBinding<TSource, TMember> : IResolverBinding<TSource>
+internal class ResolverBinding<TSource, TMember> : IResolverBinding<TSource>
 {
     public required Func<TSource, TMember> Resolver { get; init; }
     
