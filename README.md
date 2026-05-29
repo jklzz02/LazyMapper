@@ -33,7 +33,7 @@ To bind two properties that share the same type but have different names, use th
 public class Foo
 {
     public string FooName { get; set; } = "Foo";
-};
+}
 
 public class Bar
 {
@@ -57,7 +57,7 @@ It's also possible to bind two properties with different types, as long as a map
 public class FooHolder
 {
     public Foo Foo { get; set; } = new Foo();
-};
+}
 
 public class BarHolder
 {
@@ -85,7 +85,7 @@ public class Foo
 {
     public string Name { get; set; } = "";
     public string Surname { get; set; } = "";
-};
+}
 
 public class Bar
 {
