@@ -96,18 +96,18 @@ var mapper = new Mapper();
 
 mapper.CreateMap<Foo, Bar>(profile =>
 {
-    profile.Bind(f => $"{f.Name} {f.Surname}", b => b.FullName)
+    profile.Bind(f => $"{f.Name} {f.Surname}", b => b.FullName);
 });
 
 Foo foo = new Foo
 {
-    Name = "Jhon",
+    Name = "John",
     Surname = "Doe"
 };
 
 Bar bar = mapper.Map<Foo, Bar>(foo);
 
-// bar.FullName -> "Jhon Doe"
+// bar.FullName -> "John Doe"
 ``` 
 
 Nested collection and circular referencing classes are both supported and [tested](LazyMapper.Test/NestedMappingTest.cs)
@@ -158,7 +158,7 @@ public class FooProfile : MapProfile<Foo, Bar>
         AfterMap((f, b) =>
         {
             b.Id = f.Id + 1;
-        })
+        });
     }
 }
 ```
