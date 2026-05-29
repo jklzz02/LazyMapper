@@ -1,6 +1,6 @@
 using LazyMapper.TestFixtures.Models;
 
-namespace LazyMapper.Benchmark;
+namespace LazyMapper.Benchmark.Factories;
 
 public static class BenchmarkDataFactory
 {

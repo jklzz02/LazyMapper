@@ -1,9 +1,10 @@
 using BenchmarkDotNet.Attributes;
+using LazyMapper.Benchmark.Factories;
 using LazyMapper.Lib;
 using LazyMapper.TestFixtures.Dto;
 using LazyMapper.TestFixtures.Models;
 
-namespace LazyMapper.Benchmark;
+namespace LazyMapper.Benchmark.BenchMarks;
 
 [MemoryDiagnoser]
 public class CollectionMappingBenchmarks

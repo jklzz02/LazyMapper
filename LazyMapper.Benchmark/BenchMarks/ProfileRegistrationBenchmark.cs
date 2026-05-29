@@ -2,7 +2,7 @@ using BenchmarkDotNet.Attributes;
 using LazyMapper.Lib;
 using LazyMapper.TestFixtures.Profiles;
 
-namespace LazyMapper.Benchmark;
+namespace LazyMapper.Benchmark.BenchMarks;
 
 [MemoryDiagnoser]
 public class ProfileRegistrationBenchmarks
@@ -14,10 +14,9 @@ public class ProfileRegistrationBenchmarks
 
         mapper.Register<CustomerProfile>();
         mapper.Register<AddressProfile>();
+        mapper.Register<OrderProfile>();
         mapper.Register<OrderItemProfile>();
         mapper.Register<ProductProfile>();
-        mapper.Register<OrderProfile>();
-
         return mapper;
     }
 

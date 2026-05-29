@@ -1,7 +1,7 @@
 using LazyMapper.Lib;
 using LazyMapper.TestFixtures.Profiles;
 
-namespace LazyMapper.Benchmark;
+namespace LazyMapper.Benchmark.Factories;
 
 public static class BenchmarkMapperFactory
 {
