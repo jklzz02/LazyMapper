@@ -1,6 +1,6 @@
-using LazyMapper.Lib.Profile;
+using LazyMapper.Profile;
 
-namespace LazyMapper.Lib.Configuration;
+namespace LazyMapper.Configuration;
 
 /// <summary>
 /// Represents a configuration for mapping properties between instances of type <typeparamref name="TSource"/>

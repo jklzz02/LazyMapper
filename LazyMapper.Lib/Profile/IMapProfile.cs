@@ -1,7 +1,7 @@
 using System.Reflection;
-using LazyMapper.Lib.Binding;
+using LazyMapper.Binding;
 
-namespace LazyMapper.Lib.Profile;
+namespace LazyMapper.Profile;
 
 internal interface IMapProfile
 {

@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace LazyMapper.Lib.Extensions;
+namespace LazyMapper.Extensions;
 
 internal static class TypeExtensions
 {

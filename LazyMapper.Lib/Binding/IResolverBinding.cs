@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace LazyMapper.Lib.Binding;
+namespace LazyMapper.Binding;
 
 internal interface IResolverBinding
 {

@@ -1,7 +1,7 @@
 using System.Collections;
-using LazyMapper.Lib.Extensions;
+using LazyMapper.Extensions;
 
-namespace LazyMapper.Lib.Collections;
+namespace LazyMapper.Collections;
 
 internal static class CollectionHandler
 {

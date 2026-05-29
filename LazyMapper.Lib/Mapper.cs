@@ -1,12 +1,12 @@
 using System.Reflection;
-using LazyMapper.Lib.Collections;
-using LazyMapper.Lib.Configuration;
-using LazyMapper.Lib.Exceptions;
-using LazyMapper.Lib.Extensions;
-using LazyMapper.Lib.Binding;
-using LazyMapper.Lib.Profile;
+using LazyMapper.Binding;
+using LazyMapper.Collections;
+using LazyMapper.Configuration;
+using LazyMapper.Exceptions;
+using LazyMapper.Extensions;
+using LazyMapper.Profile;
 
-namespace LazyMapper.Lib;
+namespace LazyMapper;
 
 /// <summary>
 /// Provides functionality for mapping objects between source and destination types.
@@ -191,7 +191,7 @@ public class Mapper
     /// </summary>
     /// <typeparam name="TSource">The source type for the mapping configuration. Must be a class with a parameterless constructor.</typeparam>
     /// <typeparam name="TDestination">The destination type for the mapping configuration. Must be a class with a parameterless constructor.</typeparam>
-    /// <returns>An instance of <see cref="MapConfiguration{TSource, TDestination}"/> to define additional mapping details.</returns>
+    /// <returns>An instance of <see cref="MapConfiguration{TSource,TDestination}"/> to define additional mapping details.</returns>
     /// <exception cref="DuplicateProfilesException">T
     /// Thrown when an attempt is made to create a mapping configuration that already exists for the specified types.
     /// </exception>

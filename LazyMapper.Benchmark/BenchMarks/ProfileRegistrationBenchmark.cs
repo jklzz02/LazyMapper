@@ -1,5 +1,4 @@
 using BenchmarkDotNet.Attributes;
-using LazyMapper.Lib;
 using LazyMapper.TestFixtures.Profiles;
 
 namespace LazyMapper.Benchmark.BenchMarks;

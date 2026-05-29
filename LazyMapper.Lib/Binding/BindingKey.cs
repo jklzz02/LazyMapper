@@ -1,4 +1,4 @@
-namespace LazyMapper.Lib.Binding;
+namespace LazyMapper.Binding;
 
 /// <summary>
 /// Represents a key for a binding.

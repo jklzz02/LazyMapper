@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace LazyMapper.Lib.Binding;
+namespace LazyMapper.Binding;
 
 /// <summary>
 /// Represents a binding between a source property and a destination property.

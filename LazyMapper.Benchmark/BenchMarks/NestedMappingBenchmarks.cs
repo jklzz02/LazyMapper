@@ -1,6 +1,5 @@
 using BenchmarkDotNet.Attributes;
 using LazyMapper.Benchmark.Factories;
-using LazyMapper.Lib;
 using LazyMapper.TestFixtures.Dto;
 using LazyMapper.TestFixtures.Models;
 

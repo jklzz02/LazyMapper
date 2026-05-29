@@ -1,7 +1,7 @@
 using System.Reflection;
-using LazyMapper.Lib.Profile;
+using LazyMapper.Profile;
 
-namespace LazyMapper.Lib.Binding;
+namespace LazyMapper.Binding;
 
 internal static class ByConventionBinder
 {

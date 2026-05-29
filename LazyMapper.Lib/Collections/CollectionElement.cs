@@ -1,4 +1,4 @@
-namespace LazyMapper.Lib.Collections;
+namespace LazyMapper.Collections;
 
 internal record CollectionElement
 {

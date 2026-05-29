@@ -1,4 +1,4 @@
-namespace LazyMapper.Lib.Exceptions;
+namespace LazyMapper.Exceptions;
 
 /// <summary>
 /// Represents an exception thrown when duplicate profile configurations are detected during mapping registration.

@@ -1,4 +1,4 @@
-namespace LazyMapper.Lib.Exceptions;
+namespace LazyMapper.Exceptions;
 
 /// <summary>
 /// Represents an exception thrown when a mapping configuration is invalid.

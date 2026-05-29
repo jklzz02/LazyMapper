@@ -1,9 +1,9 @@
 using System.Linq.Expressions;
 using System.Reflection;
-using LazyMapper.Lib.Binding;
-using LazyMapper.Lib.Exceptions;
+using LazyMapper.Binding;
+using LazyMapper.Exceptions;
 
-namespace LazyMapper.Lib.Profile;
+namespace LazyMapper.Profile;
 
 /// <summary>
 /// Represents a map profile for mapping objects of type <typeparamref name="TSource"/> to <typeparamref name="TDestination"/>.

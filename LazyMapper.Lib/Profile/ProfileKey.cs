@@ -1,4 +1,4 @@
-namespace LazyMapper.Lib.Profile;
+namespace LazyMapper.Profile;
 
 /// <summary>
 /// Represents a key for a map profile.

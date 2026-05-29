@@ -1,4 +1,3 @@
-using LazyMapper.Lib;
 using LazyMapper.Test.Generators;
 using LazyMapper.TestFixtures.Models;
 using LazyMapper.TestFixtures.Dto;
