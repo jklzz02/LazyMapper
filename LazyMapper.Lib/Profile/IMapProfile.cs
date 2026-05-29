@@ -11,6 +11,8 @@ internal interface IMapProfile
     
     MapBinding? Binding(BindingKey key);
     
+    IResolverBinding? Resolver(BindingKey key);
+    
     void InvokeBeforeMap(object source);
     
     void InvokeAfterMap(object source, object destination);

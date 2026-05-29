@@ -120,44 +120,53 @@ public class Mapper
                 MemberType = destinationProperty.PropertyType
             };
         
-            MapBinding? resolver = profile.Binding(key);
+            MapBinding? binding = profile.Binding(key);
+            IResolverBinding? resolverBinding = profile.Resolver(key);
 
-            var sourceValue = resolver?.SourceProperty.GetValue(source);
+            if (resolverBinding is not null)
+            {
+                var value = resolverBinding.Resolve(source);
+                resolverBinding.DestinationProperty.SetValue(destination, value);
+                
+                continue;
+            }
+            
+            if (binding is null)
+            {
+                continue;
+            }
+            
+            var sourceValue = binding?.SourceProperty.GetValue(source);
 
             if (sourceValue is null)
             {
                 destinationProperty.SetValue(destination, null);
                 continue;
             }
-        
-            if (resolver is null)
-            {
-                continue;
-            }
             
-            if (resolver.SourceProperty.PropertyType.IsCollection())
+            if (binding.SourceProperty.PropertyType.IsCollection())
             {
                 var result = MapCollection(
                     sourceValue,
-                    resolver.SourceProperty.PropertyType,
-                    resolver.DestinationProperty.PropertyType);
+                    binding.SourceProperty.PropertyType,
+                    binding.DestinationProperty.PropertyType);
 
                 if (result is null)
                 {
                     continue;
                 }
-                resolver.DestinationProperty.SetValue(destination, result);
+                binding.DestinationProperty.SetValue(destination, result);
             }
 
-            if (!resolver.IsNestedResolution)
+            if (!binding.IsNestedResolution)
             {
                 destinationProperty.SetValue(destination, sourceValue);
                 continue;
             }
 
             IMapProfile? nestedProfile = GetProfile(
-                resolver.SourceProperty.PropertyType,
-                resolver.DestinationProperty.PropertyType);
+                binding.SourceProperty.PropertyType,
+                binding.DestinationProperty.PropertyType);
 
             if (nestedProfile is null)
             {
@@ -166,12 +175,12 @@ public class Mapper
             
             var mappedValue = Map(
                 sourceValue,
-                resolver.SourceProperty.PropertyType,
-                resolver.DestinationProperty.PropertyType,
+                binding.SourceProperty.PropertyType,
+                binding.DestinationProperty.PropertyType,
                 nestedProfile
             );
             
-            resolver.DestinationProperty.SetValue(destination, mappedValue);
+            binding.DestinationProperty.SetValue(destination, mappedValue);
         }
     
         return destination;

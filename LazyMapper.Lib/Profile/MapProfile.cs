@@ -16,6 +16,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
 {
     private readonly Dictionary<BindingKey, MapBinding> _sourceBindings = new();
     private readonly Dictionary<BindingKey, MapBinding> _destinationBindings = new();
+    private readonly Dictionary<BindingKey, IResolverBinding<TSource>> _destinationResolverBindings = new();
     private readonly HashSet<PropertyInfo> _ignored = [];
     
     private static readonly Type SourceType = typeof(TSource);
@@ -44,6 +45,9 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     MapBinding? IMapProfile.Binding(BindingKey binderKey)
         => _sourceBindings.GetValueOrDefault(binderKey) ?? _destinationBindings.GetValueOrDefault(binderKey);
 
+    public IResolverBinding? Resolver(BindingKey key)
+        => _destinationResolverBindings.GetValueOrDefault(key);
+
     /// <summary>
     /// Binds two members of the source and destination types.
     /// </summary>
@@ -62,13 +66,26 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     {
         ArgumentNullException.ThrowIfNull(sourceMemberSelector);
         ArgumentNullException.ThrowIfNull(destinationMemberSelector);
-        
+
+        PropertyInfo destinationProperty = ExtractProperty(destinationMemberSelector.Body);
+
+        if (!TryExtractProperty(sourceMemberSelector.Body, out var sourceProperty))
+        {
+            AddResolverBinding(new ResolverBinding<TSource, TMember>
+            {
+                Resolver = sourceMemberSelector.Compile(),
+                DestinationProperty = destinationProperty
+            });
+
+            return this;
+        }
+
         MapBinding binding = new MapBinding
         {
-            SourceProperty = ExtractProperty(sourceMemberSelector.Body),
-            DestinationProperty = ExtractProperty(destinationMemberSelector.Body)
+            SourceProperty = sourceProperty,
+            DestinationProperty = destinationProperty
         };
-        
+
         AddBinding(binding);
         return this;
     }
@@ -88,12 +105,12 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     {
         ArgumentNullException.ThrowIfNull(sourceMemberSelector);
         ArgumentNullException.ThrowIfNull(destinationMemberSelector);
-
+        
         MapBinding binding = new MapBinding
         {
             SourceProperty =  ExtractProperty(sourceMemberSelector.Body),
             DestinationProperty = ExtractProperty(destinationMemberSelector.Body)
-        };
+        };   
         
         AddBinding(binding);
         return this;
@@ -162,6 +179,20 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         _afterMap = action;
         return this;
     }
+
+    private static bool TryExtractProperty(Expression expression, out PropertyInfo property)
+    {
+        try
+        {
+            property = ExtractProperty(expression);
+            return true;
+        }
+        catch(MappingConfigurationException)
+        {
+            property = null!;
+            return false;
+        }
+    }
     
     private static PropertyInfo ExtractProperty(Expression expression)
     {
@@ -177,7 +208,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         
         return property;
     }
-
+    
     private void AddBinding(MapBinding binding)
     {
         ArgumentNullException.ThrowIfNull(binding);
@@ -194,6 +225,13 @@ public class MapProfile<TSource, TDestination> : IMapProfile
             MemberType = binding.DestinationProperty.PropertyType
         };
 
+        if (_destinationResolverBindings.ContainsKey(destinationBinderKey))
+        {
+            throw new MappingConfigurationException(
+                $"The destination  property '{binding.DestinationProperty.Name}' is already mapped to a resolver."
+            );
+        }
+
         if (!_sourceBindings.TryAdd(sourceBinderKey, binding))
         {
             throw new MappingConfigurationException(
@@ -206,6 +244,31 @@ public class MapProfile<TSource, TDestination> : IMapProfile
             throw new MappingConfigurationException(
                 $"A mapping for member '{destinationBinderKey.MemberName}' already exists."
             );
-        }   
+        }
+    }
+    
+    private void AddResolverBinding<TMember>(ResolverBinding<TSource, TMember> binding)
+    {
+        ArgumentNullException.ThrowIfNull(binding);
+
+        BindingKey destinationBinderKey = new BindingKey
+        {
+            MemberName = binding.DestinationProperty.Name,
+            MemberType = binding.DestinationProperty.PropertyType
+        };
+
+        if (_destinationBindings.ContainsKey(destinationBinderKey))
+        {
+            throw new MappingConfigurationException(
+                $"The destination property '{binding.DestinationProperty.Name}' is already mapped to a source member."
+            );
+        }
+
+        if (!_destinationResolverBindings.TryAdd(destinationBinderKey, binding))
+        {
+            throw new MappingConfigurationException(
+                $"The destination property '{binding.DestinationProperty.Name}' is already mapped to a resolver."
+            );
+        }
     }
 }
