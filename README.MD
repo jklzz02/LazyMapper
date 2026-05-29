@@ -1,7 +1,7 @@
 # LazyMapper
 
 [![License](https://img.shields.io/github/license/jklzz02/LazyMapper?)](https://github.com/jklzz02/LazyMapper/blob/main/LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/)
 ![xUnit](https://img.shields.io/badge/xUnit-tested-5E1F87)
 ![BenchmarkDotNet](https://img.shields.io/badge/BenchmarkDotNet-benchmarked-orange)
 
@@ -56,6 +56,23 @@ mapper.CreateMap<FooHolder, BarHolder>(profile =>
     profile.Bind(fh => fh.Foo, bh => bh.Bar);
 });
 ```
+
+Another possibility is to bind to a destination property a **resolver** as follows
+```csharp
+public record Foo(string Name, string Surname);
+public record Bar(string FullName);
+
+var mapper = new Mapper();
+mapper.CreateMap<Foo, Bar>(profile =>
+{
+    profile.Bind(f => $"{f.Name} {f.Surname}", b => b.FullName)
+});
+
+Foo foo = new Foo("Jhon", "Doe");
+Bar bar = mapper.Map<Foo, Bar>(foo);
+
+// bar.FullName -> "Jhon Doe"
+``` 
 
 Nested collection and circular referencing classes are both supported and [tested](LazyMapper.Test/NestedMappingTest.cs)
 
@@ -132,4 +149,3 @@ This method will scan the given assembly and register all found profiles.
 ## Limitations
 
 - **Projections are not supported.** Mapping to `IQueryable<T>` (e.g. for use with Entity Framework) is not yet implemented.
-- **Binding properties with both a different name and a different type is not supported** outside of `AfterMap` callbacks. If two properties differ in both name and type, use `AfterMap` to handle the assignment manually.
