@@ -30,22 +30,40 @@ By convention, any property sharing the same name and type will be mapped automa
 To bind two properties that share the same type but have different names, use the `Bind()` method during map configuration.
 
 ```csharp
-public record Foo(string FooName);
-public record Bar(string BarName);
+public class Foo
+{
+    public string FooName { get; set; } = "Foo";
+};
+
+public class Bar
+{
+    public string BarName { get; set; } = "Bar";
+}
+
 var mapper = new Mapper();
 mapper.CreateMap<Foo, Bar>(profile =>
 {
     profile.Bind(f => f.FooName, b => b.BarName);
 });
+
+Bar bar =  mapper.Map<Foo, Bar>(new Foo());
+
+// bar.BarName -> "Foo"
 ```
 
 It's also possible to bind two properties with different types, as long as a map has already been registered for that source/destination pair.
 
 ```csharp
-public record Foo(string FooName);
-public record Bar(string BarName);
-public record FooHolder(Foo Foo);
-public record BarHolder(Bar Bar);
+public class FooHolder
+{
+    public Foo Foo { get; set; } = new Foo();
+};
+
+public class BarHolder
+{
+    public Bar Bar { get; set; } = new Bar();
+}
+
 var mapper = new Mapper();
 mapper.CreateMap<Foo, Bar>(profile =>
 {
@@ -55,20 +73,38 @@ mapper.CreateMap<FooHolder, BarHolder>(profile =>
 {
     profile.Bind(fh => fh.Foo, bh => bh.Bar);
 });
+
+BarHolder barHolder = mapper.Map<FooHolder, BarHolder>(new FooHolder());
+
+// barHolder.Bar.BarName -> "Foo"
 ```
 
 Another possibility is to bind to a destination property a **resolver** as follows
 ```csharp
-public record Foo(string Name, string Surname);
-public record Bar(string FullName);
+public class Foo
+{
+    public string Name { get; set; } = "";
+    public string Surname { get; set; } = "";
+};
+
+public class Bar
+{
+    public string FullName { get; set; }
+}
 
 var mapper = new Mapper();
+
 mapper.CreateMap<Foo, Bar>(profile =>
 {
     profile.Bind(f => $"{f.Name} {f.Surname}", b => b.FullName)
 });
 
-Foo foo = new Foo("Jhon", "Doe");
+Foo foo = new Foo
+{
+    Name = "Jhon",
+    Surname = "Doe"
+};
+
 Bar bar = mapper.Map<Foo, Bar>(foo);
 
 // bar.FullName -> "Jhon Doe"
