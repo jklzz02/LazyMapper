@@ -7,7 +7,7 @@
         <RootNamespace>LazyMapper</RootNamespace>
         <PackageId>LazyMapper</PackageId>
         <Title>LazyMapper</Title>
-        <Version>0.0.1</Version>
+        <Version>0.0.2</Version>
         <Description>A lightweight mapping library for .NET</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageProjectUrl>https://github.com/jklzz02/LazyMapper</PackageProjectUrl>
