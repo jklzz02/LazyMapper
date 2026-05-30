@@ -76,7 +76,7 @@ public class MapProfile<TSource, TDestination> : IMapProfile
         {
             AddResolverBinding(new ResolverBinding<TSource, TMember>
             {
-                Resolver = sourceMemberSelector.Compile(),
+                ResolverExpression = sourceMemberSelector,
                 DestinationProperty = destinationProperty
             });
 
