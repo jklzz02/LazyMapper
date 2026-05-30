@@ -17,6 +17,39 @@ public class Mapper
     private readonly Dictionary<ProfileKey, IMapProfile> _profiles = new();
     private readonly Dictionary<object, object> _mapped = new(ReferenceEqualityComparer.Instance);
 
+    /// <summary>
+    /// Maps an object to an object of type <typeparamref name="TDestination"/>.
+    /// </summary>
+    /// <param name="source">The source object to be mapped. Cannot be null.</param>
+    /// <typeparam name="TDestination">The destination type. Must be a class with a parameterless constructor.</typeparam>
+    /// <returns>A new instance of type <typeparamref name="TDestination"/> mapped from the source object.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the source object is null.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when a mapping profile cannot be found to map from the source type to <typeparamref name="TDestination"/>.
+    /// </exception>
+    public TDestination Map<TDestination>(object source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        
+        _mapped.Clear();
+        Type sourceType = source.GetType();
+        Type destinationType = typeof(TDestination);
+        
+        IMapProfile? profile = GetProfile(sourceType, destinationType);
+
+        if (profile == null)
+        {
+            throw new InvalidOperationException(
+                $"Cannot map '{sourceType.FullName}' to type '{destinationType.FullName}. Please register a map profile for this mapping.'"
+            );
+        }
+        
+        profile.InvokeBeforeMap(source);
+        TDestination result = (TDestination)Map(source, sourceType, destinationType, profile);
+        profile.InvokeAfterMap(source, result);
+        
+        return result;
+    }
 
     /// <summary>
     /// Maps an object of type <typeparamref name="TSource"/> to an object of type <typeparamref name="TDestination"/>.
@@ -44,7 +77,7 @@ public class Mapper
         if (profile == null)
         {
             throw new InvalidOperationException(
-                $"Cannot map '{sourceType.FullName}' to type '{destinationType.FullName}'"
+                $"Cannot map '{sourceType.FullName}' to type '{destinationType.FullName}. Please register a map profile for this mapping.'"
             );
         }
         
