@@ -2,7 +2,7 @@ using LazyMapper.Test.Generators;
 using LazyMapper.TestFixtures.Models;
 using LazyMapper.TestFixtures.Dto;
 
-namespace LazyMapper.Test;
+namespace LazyMapper.Test.Mapping;
 
 public class FlatClassesMappingTest
 {
@@ -19,7 +19,7 @@ public class FlatClassesMappingTest
                 .Bind(s => s.EmailAddress, d => d.Email);
         });
         
-        CustomerDto result = mapper.Map<Customer, CustomerDto>(source);
+        CustomerDto result = mapper.Map<CustomerDto>(source);
         
         Assert.Equal(destination.Id, result.Id);
         Assert.Equal(destination.GivenName, result.GivenName);
@@ -43,7 +43,7 @@ public class FlatClassesMappingTest
         })
         .ReverseMap();
         
-        Customer result = mapper.Map<CustomerDto, Customer>(source);
+        Customer result = mapper.Map<Customer>(source);
         
         Assert.Equal(destination.Id, result.Id);
         Assert.Equal(destination.FirstName, result.FirstName);
@@ -67,8 +67,8 @@ public class FlatClassesMappingTest
         })
         .ReverseMap();
         
-        CustomerDto result = mapper.Map<Customer, CustomerDto>(source);
-        Customer roundTripped = mapper.Map<CustomerDto, Customer>(result);
+        CustomerDto result = mapper.Map<CustomerDto>(source);
+        Customer roundTripped = mapper.Map<Customer>(result);
         
         Assert.Equal(source.Id, roundTripped.Id);
         Assert.Equal(source.FirstName, roundTripped.FirstName);
@@ -91,7 +91,7 @@ public class FlatClassesMappingTest
                 .Bind(s => s.EmailAddress, d => d.Email);
         });
         
-        IEnumerable<CustomerDto> mapped = mapper.Map<Customer, CustomerDto>(sources);
+        IEnumerable<CustomerDto> mapped = mapper.Map<CustomerDto>(sources);
         var result = mapped.Zip(
             destinations,
             (m, d) => (Actual: m, Expected: d)
@@ -115,7 +115,7 @@ public class FlatClassesMappingTest
         Mapper mapper = new();
         mapper.CreateMap<Customer, CustomerDto>();
         
-        Assert.Throws<ArgumentNullException>(() => mapper.Map<Customer, CustomerDto>(source));
+        Assert.Throws<ArgumentNullException>(() => mapper.Map<CustomerDto>(source));
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class FlatClassesMappingTest
         Customer source = new();
         Mapper mapper = new();
         
-        Assert.Throws<InvalidOperationException>(() => mapper.Map<Customer, CustomerDto>(source));
+        Assert.Throws<InvalidOperationException>(() => mapper.Map<CustomerDto>(source));
     }
     
     [Fact]
@@ -144,7 +144,7 @@ public class FlatClassesMappingTest
                 .Ignore(s => s.Id);
         });
         
-        CustomerDto result = mapper.Map<Customer, CustomerDto>(source);
+        CustomerDto result = mapper.Map<CustomerDto>(source);
         
         Assert.Equal(source.FirstName, result.GivenName);
         Assert.NotEqual(source.Id, result.Id);

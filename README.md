@@ -21,6 +21,19 @@ var mapper = new Mapper();
 mapper.CreateMap<Foo, Bar>();
 var foo = new Foo();
 var bar = mapper.Map<Foo, Bar>(foo);
+
+// bar.BarName -> foo.FooName
+```
+
+There's also an overload that only needs to specify the destination type.
+
+```csharp
+var mapper = new Mapper();
+mapper.CreateMap<Bar>();
+var bar = new Bar();
+
+// No need to specify source type
+var foo = mapper.Map<Bar>(bar);
 ```
 
 By convention, any property sharing the same name and type will be mapped automatically.
@@ -46,7 +59,7 @@ mapper.CreateMap<Foo, Bar>(profile =>
     profile.Bind(f => f.FooName, b => b.BarName);
 });
 
-Bar bar =  mapper.Map<Foo, Bar>(new Foo());
+Bar bar =  mapper.Map<Bar>(new Foo());
 
 // bar.BarName -> "Foo"
 ```
@@ -74,7 +87,7 @@ mapper.CreateMap<FooHolder, BarHolder>(profile =>
     profile.Bind(fh => fh.Foo, bh => bh.Bar);
 });
 
-BarHolder barHolder = mapper.Map<FooHolder, BarHolder>(new FooHolder());
+BarHolder barHolder = mapper.Map<BarHolder>(new FooHolder());
 
 // barHolder.Bar.BarName -> "Foo"
 ```
@@ -94,7 +107,7 @@ public class Bar
 
 var mapper = new Mapper();
 
-mapper.CreateMap<Foo, Bar>(profile =>
+mapper.CreateMap<Bar>(profile =>
 {
     profile.Bind(f => $"{f.Name} {f.Surname}", b => b.FullName);
 });
@@ -105,7 +118,7 @@ Foo foo = new Foo
     Surname = "Doe"
 };
 
-Bar bar = mapper.Map<Foo, Bar>(foo);
+Bar bar = mapper.Map<Bar>(foo);
 
 // bar.FullName -> "John Doe"
 ``` 
@@ -118,7 +131,7 @@ To exclude a property from being mapped, use the `Ignore()` method during map co
 
 ```csharp
 var mapper = new Mapper();
-mapper.CreateMap<Foo, Bar>(profile =>
+mapper.CreateMap<Bar>(profile =>
 {
     profile.Ignore(f => f.Id);
 });
@@ -182,6 +195,19 @@ mapper.RegisterProfilesFromAssembly(profilesAssembly);
 
 This method will scan the given assembly and register all found profiles.
 
-## Limitations
+## Projections
 
-- **Projections are not supported.** Mapping to `IQueryable<T>` (e.g. for use with Entity Framework) is not yet implemented.
+From version 0.0.2, projections are now supported and submittable to EF Core providers.
+Projections will follow the same rules as regular maps, with the sole exception of `Bindings`
+that include source and destination properties of types not compatible with EF Core.
+```csharp
+var mapper = new Mapper();
+
+// Create the map profile as usual
+mapper.CreateMap<Foo, Bar>();
+
+IQueryable<Bar> query = mapper.Project<Bar>(queryable);
+```
+
+Projections will use the same `MapProfile<TSource, TDestination>` mechanism as regular maps,
+but will not execute any `BeforeMap` or `AfterMap` callbacks.
