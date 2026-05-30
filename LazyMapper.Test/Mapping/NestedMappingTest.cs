@@ -43,7 +43,7 @@ public class NestedMappingTest
     public void Nested_Classes_Should_Map_Correctly(Order source, OrderDto expected)
     {
         Mapper mapper = BuildMapper();
-        OrderDto result = mapper.Map<Order, OrderDto>(source);
+        OrderDto result = mapper.Map<OrderDto>(source);
 
         Assert.Equal(expected.Id, result.Id);
         Assert.Equal(expected.CreatedAt, result.CreatedAt);
@@ -86,8 +86,8 @@ public class NestedMappingTest
     public void Nested_Classes_RoundTrip_Should_Return_Same_Object(Order source)
     {
         Mapper mapper = BuildMapper();
-        OrderDto dto = mapper.Map<Order, OrderDto>(source);
-        Order result = mapper.Map<OrderDto, Order>(dto);
+        OrderDto dto = mapper.Map<OrderDto>(source);
+        Order result = mapper.Map<Order>(dto);
 
         Assert.Equal(source.Id, result.Id);
         Assert.Equal(source.CreatedAt, result.CreatedAt);
@@ -129,7 +129,7 @@ public class NestedMappingTest
         Mapper mapper = BuildMapper();
         Order source = new() { Id = 1, Customer = null!, Items = [] };
 
-        OrderDto result = mapper.Map<Order, OrderDto>(source);
+        OrderDto result = mapper.Map<OrderDto>(source);
 
         Assert.Null(result.Customer);
     }
@@ -140,7 +140,7 @@ public class NestedMappingTest
         Mapper mapper = BuildMapper();
         Order source = new() { Id = 1, Items = null! };
 
-        OrderDto result = mapper.Map<Order, OrderDto>(source);
+        OrderDto result = mapper.Map<OrderDto>(source);
 
         Assert.Null(result.Items);
     }
@@ -151,7 +151,7 @@ public class NestedMappingTest
         Mapper mapper = BuildMapper();
         Order source = new() { Id = 1, Items = [] };
 
-        OrderDto result = mapper.Map<Order, OrderDto>(source);
+        OrderDto result = mapper.Map<OrderDto>(source);
 
         Assert.NotNull(result.Items);
         Assert.Empty(result.Items);
@@ -163,7 +163,7 @@ public class NestedMappingTest
         Mapper mapper = BuildMapper();
         Order source = new() { Id = 1, Items = [], Metadata = null! };
 
-        OrderDto result = mapper.Map<Order, OrderDto>(source);
+        OrderDto result = mapper.Map<OrderDto>(source);
 
         Assert.Null(result.Metadata);
     }
@@ -180,7 +180,7 @@ public class NestedMappingTest
             Items = []
         };
 
-        OrderDto result = mapper.Map<Order, OrderDto>(source);
+        OrderDto result = mapper.Map<OrderDto>(source);
         result.ShippingAddress.Street = "MUTATED";
 
         Assert.NotEqual(result.ShippingAddress.Street, result.BillingAddress.Street);
@@ -197,7 +197,7 @@ public class NestedMappingTest
             Metadata = new Dictionary<string, string> { ["key"] = "original" }
         };
 
-        OrderDto result = mapper.Map<Order, OrderDto>(source);
+        OrderDto result = mapper.Map<OrderDto>(source);
         result.Metadata["key"] = "MUTATED";
 
         Assert.Equal("original", source.Metadata["key"]);
@@ -213,7 +213,7 @@ public class NestedMappingTest
             Items = [new OrderItem { ProductId = 1, ProductName = "Widget", Quantity = 1, UnitPrice = 9.99m }]
         };
 
-        OrderDto result = mapper.Map<Order, OrderDto>(source);
+        OrderDto result = mapper.Map<OrderDto>(source);
         result.Items[0].ProductName = "MUTATED";
 
         Assert.Equal("Widget", source.Items[0].ProductName);
@@ -277,18 +277,18 @@ public class NestedMappingTest
 
         IEnumerable<Order> smallOrders = BuildOrders(100).ToList();
         var sw = Stopwatch.StartNew();
-        mapper.Map<Order, OrderDto>(smallOrders);
+        mapper.Map<OrderDto>(smallOrders);
         long smallMs = sw.ElapsedMilliseconds;
 
         IEnumerable<Order> largeOrders = BuildOrders(10000).ToList();
         sw.Restart();
-        mapper.Map<Order, OrderDto>(largeOrders);
+        mapper.Map<OrderDto>(largeOrders);
         long largeMs = sw.ElapsedMilliseconds;
         
         
         IEnumerable<Order> hugeOrders = BuildOrders(100_000).ToList();
         sw.Restart();
-        mapper.Map<Order, OrderDto>(hugeOrders);
+        mapper.Map<OrderDto>(hugeOrders);
         long hugeMs = sw.ElapsedMilliseconds;
 
         Assert.True(largeMs < Math.Max(smallMs, 1) * 10,
@@ -315,7 +315,7 @@ public class NestedMappingTest
         }
 
         var sw = Stopwatch.StartNew();
-        mapper.Map<Category, CategoryDto>(root);
+        mapper.Map<CategoryDto>(root);
         sw.Stop();
 
         Assert.True(sw.ElapsedMilliseconds < 100,

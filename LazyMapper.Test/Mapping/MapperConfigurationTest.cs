@@ -16,7 +16,7 @@ public class MapperConfigurationTest
         CustomerDto result = new();
         var ex  = Record.Exception(() =>
         {
-            result = mapper.Map<Customer, CustomerDto>(source);
+            result = mapper.Map<CustomerDto>(source);
         });
         
         Assert.Null(ex);
@@ -37,7 +37,7 @@ public class MapperConfigurationTest
         CustomerDto result = new();
         var ex  = Record.Exception(() =>
         {
-            result = mapper.Map<Customer, CustomerDto>(source);
+            result = mapper.Map<CustomerDto>(source);
         });
         
         Assert.Null(ex);
@@ -60,7 +60,7 @@ public class MapperConfigurationTest
         CustomerDto result = new();
         var forwardEx  = Record.Exception(() =>
         {
-            result = mapper.Map<Customer, CustomerDto>(source);
+            result = mapper.Map<CustomerDto>(source);
         });
         
         var reverseEx = Record.Exception(() => mapper.Map<CustomerDto, Customer>(result));

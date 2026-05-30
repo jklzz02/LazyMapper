@@ -89,7 +89,17 @@ public class Mapper
         
         return result;
     }
-
+    
+    /// <summary>
+    /// Maps a collection of objects to a collection of objects of type <typeparamref name="TDestination"/>.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination type. Must be a class with a parameterless constructor.</typeparam>
+    /// <param name="source">The source collection to be mapped. Cannot be null.</param>
+    /// <returns>An <see cref="IEnumerable{TDestination}"/> containing mapped objects from the source collection.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the source collection is null.</exception>
+    public IEnumerable<TDestination> Map<TDestination>(IEnumerable<object> source)
+        => source.Select(Map<TDestination>);
+    
     /// <summary>
     /// Maps a collection of objects of type <typeparamref name="TSource"/> to a collection of objects of type <typeparamref name="TDestination"/>.
     /// </summary>
