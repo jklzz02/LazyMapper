@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Reflection;
 using LazyMapper.Binding;
 using LazyMapper.Collections;
@@ -5,6 +6,7 @@ using LazyMapper.Configuration;
 using LazyMapper.Exceptions;
 using LazyMapper.Extensions;
 using LazyMapper.Profile;
+using LazyMapper.Projection;
 
 namespace LazyMapper;
 
@@ -217,6 +219,20 @@ public class Mapper
         }
     
         return destination;
+    }
+
+    /// <summary>
+    /// Projects a queryable source to a queryable destination.
+    /// </summary>
+    /// <param name="source">The queriable source.</param>
+    /// <typeparam name="TSource">The source element type.</typeparam>
+    /// <typeparam name="TDestination">The destination element type.</typeparam>
+    /// <returns>A projected <see cref="IQueryable{T}"/> of <typeparamref name="TDestination"/>.</returns>
+    public IQueryable<TDestination> ProjectTo<TSource, TDestination>(IQueryable<TSource> source)
+    {
+        ProjectionBuilder builder = new ProjectionBuilder(GetProfile);
+        Expression<Func<TSource, TDestination>> projection = builder.Build<TSource, TDestination>();
+        return source.Select(projection);
     }
 
     /// <summary>

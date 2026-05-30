@@ -2,7 +2,7 @@ using LazyMapper.TestFixtures.Models;
 using LazyMapper.TestFixtures.Dto;
 using LazyMapper.TestFixtures.Profiles;
 
-namespace LazyMapper.Test;
+namespace LazyMapper.Test.Mapping;
 
 public class MapperConfigurationTest
 {

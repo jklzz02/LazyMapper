@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq.Expressions;
 using LazyMapper.Extensions;
 
 namespace LazyMapper.Collections;
@@ -116,5 +117,57 @@ internal static class CollectionHandler
             defaultList.Add(item);
         }
         return defaultList;
+    }
+    
+    internal static Expression BuildCollectionProjectionExpression(
+        Expression sourceAccess,
+        Type sourceElementType,
+        Type destElementType,
+        Type destCollectionType,
+        Func<Type, Type, Expression, Expression> buildNestedProjection)
+    {
+        if (destCollectionType.IsGenericType &&
+            destCollectionType.GetGenericTypeDefinition() == typeof(HashSet<>))
+        {
+            throw new InvalidOperationException(
+                $"Cannot project into 'HashSet<{destElementType.Name}>' — " +
+                "ToHashSet() cannot be translated to SQL. Use List<T> or array on your DTO instead."
+            );
+        }
+
+        if (destCollectionType.IsGenericType &&
+            destCollectionType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+        {
+            throw new InvalidOperationException(
+                $"Cannot project into 'Dictionary<,>' — " +
+                "Dictionary is not supported in projections. Use List<T> or array on your DTO instead."
+            );
+        }
+
+        var itemParam = Expression.Parameter(sourceElementType, "item");
+        var itemProjection = buildNestedProjection(sourceElementType, destElementType, itemParam);
+        var itemLambda = Expression.Lambda(itemProjection, itemParam);
+
+        var selectCall = Expression.Call(
+            typeof(Enumerable),
+            nameof(Enumerable.Select),
+            [sourceElementType, destElementType],
+            sourceAccess,
+            itemLambda);
+
+        if (destCollectionType.IsArray)
+        {
+            return Expression.Call(
+                typeof(Enumerable),
+                nameof(Enumerable.ToArray),
+                [destElementType],
+                selectCall);
+        }
+
+        return Expression.Call(
+            typeof(Enumerable),
+            nameof(Enumerable.ToList),
+            [destElementType],
+            selectCall);
     }
 }

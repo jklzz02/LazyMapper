@@ -2,7 +2,7 @@ using LazyMapper.Test.Generators;
 using LazyMapper.TestFixtures.Models;
 using LazyMapper.TestFixtures.Dto;
 
-namespace LazyMapper.Test;
+namespace LazyMapper.Test.Mapping;
 
 public class FlatClassesMappingTest
 {
