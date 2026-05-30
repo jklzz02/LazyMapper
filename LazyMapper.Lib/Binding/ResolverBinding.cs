@@ -10,7 +10,10 @@ internal class ResolverBinding<TSource, TMember> : IResolverBinding<TSource>
     public required Expression<Func<TSource, TMember>> ResolverExpression { get; init; }
     
     public required PropertyInfo DestinationProperty { get; init; }
-
+    
+    LambdaExpression IResolverBinding.ResolverExpression
+        => ResolverExpression;
+    
     public object? Resolve(TSource source)
     {
         var key = new  ResolverCacheKey(typeof(TSource), DestinationProperty);
