@@ -11,8 +11,6 @@ namespace LazyMapper.Profile;
 /// <typeparam name="TSource">The source type. Must be a class with a parameterless constructor.</typeparam>
 /// <typeparam name="TDestination">The destination type. Must be a class with a parameterless constructor.</typeparam>
 public class MapProfile<TSource, TDestination> : IMapProfile
-    where TSource :  new()
-    where TDestination : new()
 {
     private readonly Dictionary<BindingKey, MapBinding> _sourceBindings = new();
     private readonly Dictionary<BindingKey, MapBinding> _destinationBindings = new();

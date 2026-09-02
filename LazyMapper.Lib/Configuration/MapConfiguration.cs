@@ -13,8 +13,6 @@ namespace LazyMapper.Configuration;
 /// The destination type involved in the mapping. Must be a class with a parameterless constructor.
 /// </typeparam>
 public class MapConfiguration<TSource, TDestination>
-    where TSource : class, new()
-    where TDestination : class, new()
 {    
     private readonly Mapper _mapper;
     private readonly MapProfile<TSource, TDestination> _profile;
