@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
 using LazyMapper.Binding;
@@ -12,10 +13,10 @@ namespace LazyMapper.Profile;
 /// <typeparam name="TDestination">The destination type. Must be a class with a parameterless constructor.</typeparam>
 public class MapProfile<TSource, TDestination> : IMapProfile
 {
-    private readonly Dictionary<BindingKey, MapBinding> _sourceBindings = new();
-    private readonly Dictionary<BindingKey, MapBinding> _destinationBindings = new();
-    private readonly Dictionary<BindingKey, IResolverBinding<TSource>> _destinationResolverBindings = new();
-    private readonly HashSet<PropertyInfo> _ignored = [];
+    private readonly ConcurrentDictionary<BindingKey, MapBinding> _sourceBindings = new();
+    private readonly ConcurrentDictionary<BindingKey, MapBinding> _destinationBindings = new();
+    private readonly ConcurrentDictionary<BindingKey, IResolverBinding<TSource>> _destinationResolverBindings = new();
+    private readonly ConcurrentBag<PropertyInfo> _ignored = [];
     
     private static readonly Type SourceType = typeof(TSource);
     private static readonly Type DestinationType = typeof(TDestination);
@@ -127,15 +128,21 @@ public class MapProfile<TSource, TDestination> : IMapProfile
     public MapProfile<TSource, TDestination> Ignore<TMember>(Expression<Func<TSource, TMember>> memberSelector)
     {
         ArgumentNullException.ThrowIfNull(memberSelector);
-        
         PropertyInfo property = ExtractProperty(memberSelector.Body);
 
         _ignored.Add(property);
-        _sourceBindings.Remove(new BindingKey
+
+        var sourceKey = new BindingKey { MemberName = property.Name, MemberType = property.PropertyType };
+
+        if (_sourceBindings.TryRemove(sourceKey, out var removedBinding))
         {
-            MemberName = property.Name,
-            MemberType = property.PropertyType
-        });
+            var destKey = new BindingKey
+            {
+                MemberName = removedBinding.DestinationProperty.Name,
+                MemberType = removedBinding.DestinationProperty.PropertyType
+            };
+            _destinationBindings.TryRemove(destKey, out _);
+        }
 
         return this;
     }

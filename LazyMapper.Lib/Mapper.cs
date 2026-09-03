@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
 using LazyMapper.Binding;
@@ -16,8 +17,7 @@ namespace LazyMapper;
 /// </summary>
 public class Mapper
 {
-    private readonly Dictionary<ProfileKey, IMapProfile> _profiles = new();
-    private readonly Dictionary<object, object> _mapped = new(ReferenceEqualityComparer.Instance);
+    private readonly ConcurrentDictionary<ProfileKey, IMapProfile> _profiles = new();
 
     /// <summary>
     /// Maps an object to an object of type <typeparamref name="TDestination"/>.
@@ -33,7 +33,7 @@ public class Mapper
     {
         ArgumentNullException.ThrowIfNull(source);
         
-        _mapped.Clear();
+        var mapped = new Dictionary<object, object>(ReferenceEqualityComparer.Instance);
         Type sourceType = source.GetType();
         Type destinationType = typeof(TDestination);
         
@@ -47,7 +47,7 @@ public class Mapper
         }
         
         profile.InvokeBeforeMap(source);
-        TDestination result = (TDestination)Map(source, sourceType, destinationType, profile);
+        TDestination result = (TDestination)Map(source, sourceType, destinationType, profile, mapped);
         profile.InvokeAfterMap(source, result);
         
         return result;
@@ -68,7 +68,7 @@ public class Mapper
     {
         ArgumentNullException.ThrowIfNull(source);
         
-        _mapped.Clear();
+        var mapped = new Dictionary<object, object>(ReferenceEqualityComparer.Instance);
         Type sourceType = typeof(TSource);
         Type destinationType = typeof(TDestination);
         
@@ -82,7 +82,7 @@ public class Mapper
         }
         
         profile.InvokeBeforeMap(source);
-        TDestination result = (TDestination)Map(source, sourceType, destinationType, profile);
+        TDestination result = (TDestination)Map(source, sourceType, destinationType, profile, mapped);
         profile.InvokeAfterMap(source, result);
         
         return result;
@@ -114,9 +114,14 @@ public class Mapper
         return source.Select(Map<TSource, TDestination>);
     }
     
-    private object Map(object source, Type sourceType, Type destType, IMapProfile profile)
+    private object Map(
+        object source,
+        Type sourceType,
+        Type destType,
+        IMapProfile profile,
+        Dictionary<object, object> mappedInstances)
     {
-        if (_mapped.TryGetValue(source, out var mapped))
+        if (mappedInstances.TryGetValue(source, out var mapped))
         {
             return mapped;
         }
@@ -126,7 +131,7 @@ public class Mapper
             .ToList();
 
         object destination = CreateInstance(destType, source, sourceType);
-        _mapped[source] = destination;
+        mappedInstances[source] = destination;
 
         foreach (MapBinding resolver in bindings)
         {
@@ -137,7 +142,8 @@ public class Mapper
                 var result = MapCollection(
                     value,
                     resolver.SourceProperty.PropertyType,
-                    resolver.DestinationProperty.PropertyType);
+                    resolver.DestinationProperty.PropertyType,
+                    mappedInstances);
 
                 resolver.DestinationProperty.SetValue(destination, result);
                 continue;
@@ -192,7 +198,8 @@ public class Mapper
                 var result = MapCollection(
                     sourceValue,
                     binding.SourceProperty.PropertyType,
-                    binding.DestinationProperty.PropertyType);
+                    binding.DestinationProperty.PropertyType,
+                    mappedInstances);
 
                 if (result is null)
                 {
@@ -220,7 +227,8 @@ public class Mapper
                 sourceValue,
                 binding.SourceProperty.PropertyType,
                 binding.DestinationProperty.PropertyType,
-                nestedProfile
+                nestedProfile,
+                mappedInstances
             );
             
             binding.DestinationProperty.SetValue(destination, mappedValue);
@@ -372,7 +380,8 @@ public class Mapper
     private object? MapCollection(
         object sourceValue,
         Type sourceCollectionType,
-        Type destCollectionType)
+        Type destCollectionType,
+        Dictionary<object, object> mapped)
     {
         Type? sourceElementType = sourceCollectionType.CollectionElementType();
         Type? destElementType   = destCollectionType.CollectionElementType();
@@ -385,7 +394,7 @@ public class Mapper
         if (sourceElementType.IsCollection())
         {
             var mappedItems = items
-                .Select(item => MapCollection(item.Value, sourceElementType, destElementType))
+                .Select(item => MapCollection(item.Value, sourceElementType, destElementType, mapped))
                 .Where(item => item != null)
                 .ToList();
 
@@ -396,7 +405,12 @@ public class Mapper
         if (elementProfile is not null)
         {
             var mappedItems = items
-                .Select(item => Map(item.Value, sourceElementType, destElementType, elementProfile))
+                .Select(item => Map(
+                    item.Value,
+                    sourceElementType,
+                    destElementType,
+                    elementProfile,
+                    mapped))
                 .ToList();
 
             return CollectionHandler.ReconstructCollection(mappedItems, destElementType, destCollectionType);
