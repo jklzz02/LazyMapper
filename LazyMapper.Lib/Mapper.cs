@@ -179,7 +179,7 @@ public class Mapper
                 continue;
             }
             
-            var sourceValue = binding?.SourceProperty.GetValue(source);
+            var sourceValue = binding.SourceProperty.GetValue(source);
 
             if (sourceValue is null)
             {
@@ -187,7 +187,7 @@ public class Mapper
                 continue;
             }
             
-            if (binding!.SourceProperty.PropertyType.IsCollection())
+            if (binding.SourceProperty.PropertyType.IsCollection())
             {
                 var result = MapCollection(
                     sourceValue,
@@ -232,7 +232,7 @@ public class Mapper
     /// <summary>
     /// Projects a queryable source to a queryable destination.
     /// </summary>
-    /// <param name="source">The queriable source.</param>
+    /// <param name="source">The queryable source.</param>
     /// <typeparam name="TSource">The source element type.</typeparam>
     /// <typeparam name="TDestination">The destination element type.</typeparam>
     /// <returns>A projected <see cref="IQueryable{T}"/> of <typeparamref name="TDestination"/>.</returns>
@@ -412,8 +412,6 @@ public class Mapper
         return null;
     }
     
-    private IMapProfile? GetProfile(ProfileKey key) 
-        => _profiles.GetValueOrDefault(key);
     
     private IMapProfile? GetProfile(Type sourceType, Type destType)
         => _profiles.GetValueOrDefault(new ProfileKey
