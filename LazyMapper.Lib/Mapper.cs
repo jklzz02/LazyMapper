@@ -65,8 +65,6 @@ public class Mapper
     /// Thrown when a mapping profile cannot be found to map from type <typeparamref name="TSource"/> to type <typeparamref name="TDestination"/>.
     /// </exception>
     public TDestination Map<TSource, TDestination>(TSource source)
-        where TSource : class, new()
-        where TDestination : class, new()
     {
         ArgumentNullException.ThrowIfNull(source);
         
@@ -127,7 +125,7 @@ public class Mapper
             .BuildBindings(sourceType, destType, profile)
             .ToList();
 
-        object destination = Activator.CreateInstance(destType)!;
+        object destination = CreateInstance(destType, source, sourceType);
         _mapped[source] = destination;
 
         foreach (MapBinding resolver in bindings)
@@ -255,8 +253,6 @@ public class Mapper
     /// Thrown when an attempt is made to create a mapping configuration that already exists for the specified types.
     /// </exception>
     public MapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>()
-        where TSource : class, new()
-        where TDestination : class, new()
         => CreateMap<TSource, TDestination>(null);
 
 
@@ -278,8 +274,6 @@ public class Mapper
     /// </exception>
     public MapConfiguration<TSource, TDestination> CreateMap<TSource, TDestination>(
         Action<MapProfile<TSource, TDestination>>? mapConfigurations)
-        where TSource : class, new()
-        where TDestination : class, new()
     {
         MapProfile<TSource, TDestination> profile = new MapProfile<TSource, TDestination>();
         mapConfigurations?.Invoke(profile);
@@ -341,8 +335,6 @@ public class Mapper
     /// Thrown when an attempt is made to create a mapping configuration that already exists for the specified types.
     /// </exception>
     public void Register<TSource, TDestination>(MapProfile<TSource, TDestination> profile)
-        where TSource : class, new()
-        where TDestination : class, new()
     {
         ArgumentNullException.ThrowIfNull(profile);
         var core = (IMapProfile)profile;
@@ -431,8 +423,6 @@ public class Mapper
         });
 
     private IMapProfile? GetProfile<TSource, TDestination>()
-        where TSource : class, new()
-        where TDestination : class, new()
     {
         ProfileKey key = new ProfileKey
         {
@@ -468,4 +458,58 @@ public class Mapper
     private static bool IsMapProfile(Type type)
         => type.BaseType is { IsGenericType: true } baseType 
            && baseType.GetGenericTypeDefinition() == typeof(MapProfile<,>);
+
+    private object CreateInstance(Type destType, object? source, Type? sourceType)
+    {
+        try
+        {
+            var parameterlessConstructor = destType.GetConstructor(Type.EmptyTypes);
+            if (parameterlessConstructor != null)
+            {
+                return Activator.CreateInstance(destType)!;
+            }
+
+            var constructor = destType.GetConstructors()
+                .OrderByDescending(c => c.GetParameters().Length)
+                .FirstOrDefault();
+
+            if (constructor == null)
+            {
+                throw new InvalidOperationException("No accessible constructors found.");
+            }
+
+            var parameters = constructor.GetParameters();
+            var parameterValues = new object?[parameters.Length];
+            var sourceProps = sourceType?
+                .GetProperties()
+                .ToLookup(p => p.Name);
+
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                var param = parameters[i];
+                var sourceProperty = sourceProps?[param.Name!].FirstOrDefault();
+
+                if (sourceProperty != null && source != null)
+                {
+                    parameterValues[i] = sourceProperty.GetValue(source);
+                }
+                else if (param.HasDefaultValue)
+                {
+                    parameterValues[i] = param.DefaultValue;
+                }
+                else
+                {
+                    parameterValues[i] = param.ParameterType.IsValueType 
+                        ? Activator.CreateInstance(param.ParameterType) 
+                        : null;
+                }
+            }
+
+            return constructor.Invoke(parameterValues);
+        }
+        catch (Exception ex)
+        {
+            throw new ObjectInstantiationException(destType, ex);
+        }
+    }
 }

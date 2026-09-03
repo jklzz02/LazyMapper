@@ -11,8 +11,6 @@ namespace LazyMapper.Profile;
 /// <typeparam name="TSource">The source type. Must be a class with a parameterless constructor.</typeparam>
 /// <typeparam name="TDestination">The destination type. Must be a class with a parameterless constructor.</typeparam>
 public class MapProfile<TSource, TDestination> : IMapProfile
-    where TSource : class, new()
-    where TDestination : class, new()
 {
     private readonly Dictionary<BindingKey, MapBinding> _sourceBindings = new();
     private readonly Dictionary<BindingKey, MapBinding> _destinationBindings = new();
@@ -203,12 +201,17 @@ public class MapProfile<TSource, TDestination> : IMapProfile
             throw new MappingConfigurationException(
                 $"'{nameof(expression)}' must be a member expression, got: '{expression.NodeType}'."
             );
-        
+
+        if (memberExpression.Expression is not ParameterExpression)
+            throw new MappingConfigurationException(
+                $"'{nameof(expression)}' must be a direct member access on the lambda parameter, got a nested expression: '{expression}'."
+            );
+
         if (memberExpression.Member is not PropertyInfo property)
             throw new MappingConfigurationException(
                 $"'{nameof(expression)}' must be a property expression, got: '{memberExpression.Member.MemberType}'."
             );
-        
+    
         return property;
     }
     

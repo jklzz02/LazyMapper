@@ -13,8 +13,6 @@ namespace LazyMapper.Configuration;
 /// The destination type involved in the mapping. Must be a class with a parameterless constructor.
 /// </typeparam>
 public class MapConfiguration<TSource, TDestination>
-    where TSource : class, new()
-    where TDestination : class, new()
 {    
     private readonly Mapper _mapper;
     private readonly MapProfile<TSource, TDestination> _profile;
@@ -57,6 +55,17 @@ public class MapConfiguration<TSource, TDestination>
     public void ReverseMap()
     {
         var reversed = _profile.Reverse();
+        _mapper.Register(reversed);
+    }
+
+    /// <summary>
+    /// Registers a reverse mapping profile with the specified configuration.
+    /// </summary>
+    /// <param name="configure">The configuration action for the reversed profile.</param>
+    public void ReverseMap(Action<MapProfile<TDestination, TSource>> configure)
+    {
+        var reversed = _profile.Reverse();
+        configure(reversed);
         _mapper.Register(reversed);
     }
 }
