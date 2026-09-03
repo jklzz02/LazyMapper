@@ -201,12 +201,17 @@ public class MapProfile<TSource, TDestination> : IMapProfile
             throw new MappingConfigurationException(
                 $"'{nameof(expression)}' must be a member expression, got: '{expression.NodeType}'."
             );
-        
+
+        if (memberExpression.Expression is not ParameterExpression)
+            throw new MappingConfigurationException(
+                $"'{nameof(expression)}' must be a direct member access on the lambda parameter, got a nested expression: '{expression}'."
+            );
+
         if (memberExpression.Member is not PropertyInfo property)
             throw new MappingConfigurationException(
                 $"'{nameof(expression)}' must be a property expression, got: '{memberExpression.Member.MemberType}'."
             );
-        
+    
         return property;
     }
     

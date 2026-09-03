@@ -57,4 +57,15 @@ public class MapConfiguration<TSource, TDestination>
         var reversed = _profile.Reverse();
         _mapper.Register(reversed);
     }
+
+    /// <summary>
+    /// Registers a reverse mapping profile with the specified configuration.
+    /// </summary>
+    /// <param name="configure">The configuration action for the reversed profile.</param>
+    public void ReverseMap(Action<MapProfile<TDestination, TSource>> configure)
+    {
+        var reversed = _profile.Reverse();
+        configure(reversed);
+        _mapper.Register(reversed);
+    }
 }
